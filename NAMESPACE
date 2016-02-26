@@ -1,0 +1,7 @@
+import("RGtk2","gWidgets","gWidgetsRGtk2","RGtk2Extras","qqman")
+importFrom("graphics","abline","plot")
+importFrom("methods","new")
+importFrom("stats","optim","pchisq","var")
+importFrom("utils","read.csv","write.table")
+export("mrMLM")
+

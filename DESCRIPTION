@@ -1,0 +1,17 @@
+Package: mrMLM
+Type: Package
+Title: Multilocus Random Mixed Linear Model for Genome-Wide Association
+        Study
+Version: 1.0
+Date: 2016-02-26
+Author: Wenlong Ren,Shibo Wang and Yuanming Zhang
+Maintainer: Yuanming Zhang<soyzhang@mail.hzau.edu.cn>
+Description: Conduct multi-locus random-SNP-effect mixed linear model analysis for genome-wide association study. First, each marker is scanned using random-SNP-effect mixed linear model method. Then, all the markers selected from the first step are included in the multi-locus model and their effects are estimated by an EM empirical Bayes method. No multiple test correction is needed.
+Depends: gWidgets,gWidgetsRGtk2,RGtk2Extras,qqman
+Imports: RGtk2,methods
+License: GPL (>= 2)
+LazyLoad: yes
+Packaged: 2016-02-26 07:31:46 UTC; Administrator
+NeedsCompilation: no
+Repository: CRAN
+Date/Publication: 2016-02-26 14:12:01
