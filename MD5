@@ -1,10 +1,10 @@
-5e88febc74834d94fbbd793f51c0a71b *DESCRIPTION
+dd9b16d14f14714d1899d90743a0921a *DESCRIPTION
 1970f796d610ec704a878bc2da7b61d3 *NAMESPACE
-a2c8e26d607091d6ecbeb1c85a54eaa8 *R/mrMLM.R
+0f8410b16cd9372bc544113fe1035145 *R/mrMLM.R
 2e217f9540e74fd99e5e45e8078b0e05 *R/zzz.R
-f03a105fcd83ee027ccea5d14676d5c2 *inst/doc/Instruction.pdf
+dbd8a8b6af57f23124abff3750944ec1 *inst/doc/Instruction.pdf
 4488d0a4c2107bcdc31a65ff81c1c8e9 *inst/extdata/genotype.csv
 542d1d662c076372b6e80f59a8ccfc21 *inst/extdata/kinship.csv
 6c7d17ee00e0f20a913098998756e052 *inst/extdata/phenotype.csv
 e31177efc43ac53d79f9562907e0bbd3 *inst/extdata/structure.csv
-6b6b8cbf8850506e8959c89ea4f12d73 *man/mrMLM-package.Rd
+8894e7cb2cbb390925a7023c9f276ee0 *man/mrMLM-package.Rd

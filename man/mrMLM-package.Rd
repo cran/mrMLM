@@ -12,8 +12,8 @@ Conduct multi-locus random-SNP-effect mixed linear model analysis for genome-wid
 \tabular{ll}{
 Package: \tab mrMLM\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2016-02-26\cr
+Version: \tab 1.1\cr
+Date: \tab 2016-03-05\cr
 Depends: \tab gWidgets, gWidgetsRGtk2, RGtk2Extras, qqman\cr
 Imports: \tab RGtk2,methods\cr
 License: \tab GPL version 2 or newer\cr

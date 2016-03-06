@@ -19,17 +19,21 @@ mrMLM<-function(){
     return(obj)
   }
   
-  window<-gwindow(title="Multi-locus Random-SNP-effect Mixed Linear Model (mrMLM)",visible=TRUE,width=1240,height=730,expand=TRUE)
+  window<-gwindow(title="Multilocus Random-SNP-effect Mixed Linear Model (mrMLM)",visible=TRUE,width=1240,height=730,expand=TRUE)
   plotwin<-gwindow("Manhattan Plot",visible=FALSE,width=600,height=360)
   gpw<-ggroup(container=plotwin)
   ggpw<-ggraphics(container=gpw)
   plotwin1<-gwindow("Q-Q Plot",visible=FALSE,width=600,height=360)
   gpw1<-ggroup(container=plotwin1)
   ggpw1<-ggraphics(container=gpw1)
-  choicekk<-gwindow("Choice kinship",visible=FALSE,width=250,height=150)
+  choicekk<-gwindow("Choose Kinship option",visible=FALSE,width=320,height=150)
   gkk<-ggroup(container=choicekk,expand=FALSE)
-  includeps<-gwindow("Include population structure?",visible=FALSE,width=300,height=150)
+  includeps<-gwindow("Include population structure?",visible=FALSE,width=320,height=150)
   gps<-ggroup(container=includeps,expand=FALSE)
+  parsetwin<-gwindow("Parameter Setting",visible=FALSE,width=260,height=280)
+  gpar<-ggroup(container=parsetwin,expand=FALSE)
+  choicesave<-gwindow("Save as ...",visible=FALSE,width=250,height=150)
+  gcsave<-ggroup(container=choicesave,expand=FALSE)
   
   lyt<-glayout(container=window,spacing=13)
   
@@ -37,6 +41,7 @@ mrMLM<-function(){
   phenotype<-gbutton("Phenotype",container=lyt)
   kinship<-gbutton("Kinship",container=lyt)
   population<-gbutton("Population Structure",container=lyt)
+  parset<-gbutton("Parameter Setting",container=lyt)
   manhattan<-gbutton("Manhattan Plot",container=lyt)
   qqplot<-gbutton("QQ Plot",container=lyt)
   
@@ -54,15 +59,16 @@ mrMLM<-function(){
   lyt[2,1]<-phenotype
   lyt[3,1]<-kinship
   lyt[4,1]<-population
-  lyt[7,1]<-run
-  lyt[8,1]<-savefile
-  lyt[11,1]<-gwline
-  lyt[12,1]<-gwedit
-  lyt[13,1]<-manhattan
-  lyt[14,1]<-gwstandp
-  lyt[15,1]<-gwedit1
-  lyt[16,1]<-qqplot
-  lyt[19,1]<-exit
+  lyt[7,1]<-parset
+  lyt[8,1]<-run
+  lyt[9,1]<-savefile
+  lyt[12,1]<-gwline
+  lyt[13,1]<-gwedit
+  lyt[14,1]<-manhattan
+  lyt[15,1]<-gwstandp
+  lyt[16,1]<-gwedit1
+  lyt[17,1]<-qqplot
+  lyt[20,1]<-exit
   
   nb1<-gnotebook(tab.pos=3,closebuttons=TRUE,dontCloseThese=TRUE,container=lyt,expand=TRUE)
   size(nb1)<-c(680,540)
@@ -75,7 +81,7 @@ mrMLM<-function(){
                 3. The software package is developed by Wen-Long Ren, Shi-Bo Wang & Yuan-Ming Zhang.
                 
                 
-                Version 1.0, Realeased January 2016",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
+                Version 1.1, Realeased March 2016",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
   
   
   lyt[1:20,2,expand=TRUE]<-nb1
@@ -104,19 +110,19 @@ mrMLM<-function(){
   addHandlerClicked(kinship,handler=function(h,...){
     if(isExtant(choicekk)==FALSE)
     {
-      choicekk<-gwindow("Choice kinship",visible=FALSE,width=250,height=150)
+      choicekk<-gwindow("Choose Kinship option",visible=FALSE,width=320,height=150)
       gkk<-ggroup(container=choicekk,expand=FALSE)
     }
     lytkk<-glayout(container=gkk,spacing=13)
     mrenv$okkk<-gbutton("     OK    ",container=lytkk)
-    cancelkk<-gbutton(" Cancel ",container=lytkk)
-    mrenv$radiokk<-gradio(c("Input kinship file directly","Compute by this program"),selected=1,horizontal=FALSE,container=lytkk)
+    mrenv$cancelkk<-gbutton(" Cancel ",container=lytkk)
+    mrenv$radiokk<-gradio(c("Input the Kinship matrix file","Calculate the Kinship matrix by this software"),selected=1,horizontal=FALSE,container=lytkk)
     lytkk[2:3,2:5]<-mrenv$radiokk
-    lytkk[5,3]<-mrenv$okkk
-    lytkk[5,5]<-cancelkk
+    lytkk[5,2]<-mrenv$okkk
+    lytkk[5,5]<-mrenv$cancelkk
     visible(choicekk)<-TRUE
     addHandlerClicked(mrenv$okkk,handler=function(h,...){
-      if(svalue(mrenv$radiokk)=="Input kinship file directly"){
+      if(svalue(mrenv$radiokk)=="Input the Kinship matrix file"){
         input2<-gfile(text="Select a file...",type="open",
                       filter=list("All files"=list(patterns=c("*")),
                                   "CSV files"=list(patterns=c("*.csv"))))
@@ -148,12 +154,21 @@ mrMLM<-function(){
           cc<-mean(diag(kk1))
           kk1<-kk1/cc
           mrenv$kk<-kk1
+          rowsize<-dim(mrenv$kk)[1]
+          aa<-as.character()
+          for(i in 1:rowsize)
+          {
+            a<-paste("V",i,sep="")
+            aa<-c(aa,a)
+          }
+          colnames(mrenv$kk)<-aa
+          rownames(mrenv$kk)<-aa
           tbdfe2<-gdfedit(mrenv$kk,container=nb1,expand=TRUE,label="Kinship")
           dispose(choicekk)
         }     
       }
     })
-    addHandlerClicked(cancelkk,handler=function(h,...){
+    addHandlerClicked(mrenv$cancelkk,handler=function(h,...){
       dispose(choicekk)
     })
   })
@@ -175,19 +190,19 @@ mrMLM<-function(){
   addHandlerClicked(population,handler=function(h,...){
     if(isExtant(includeps)==FALSE)
     {
-      includeps<-gwindow("Include population structure?",visible=FALSE,width=300,height=150)
+      includeps<-gwindow("Include population structure?",visible=FALSE,width=320,height=150)
       gps<-ggroup(container=includeps,expand=FALSE)
     }
     lytps<-glayout(container=gps,spacing=13)
     okps<-gbutton("     OK    ",container=lytps)
     cancelps<-gbutton(" Cancel ",container=lytps)
-    radiops<-gradio(c("Do not need population structure","Input population structure file directly"),selected=1,horizontal=FALSE,container=lytps)
+    radiops<-gradio(c("Population structure has no effect on GWAS","Input Population Structure file"),selected=1,horizontal=FALSE,container=lytps)
     lytps[2:3,2:5]<-radiops
-    lytps[5,3]<-okps
+    lytps[5,2]<-okps
     lytps[5,5]<-cancelps
     visible(includeps)<-TRUE
     addHandlerClicked(okps,handler=function(h,...){
-      if(svalue(radiops)=="Input population structure file directly"){
+      if(svalue(radiops)=="Input Population Structure file"){
         mrenv$flagps<-0
         input4<-gfile(text="Select a file...",type="open",
                       filter=list("All files"=list(patterns=c("*")),
@@ -212,6 +227,63 @@ mrMLM<-function(){
     })
   })
   
+  addHandlerClicked(parset,handler=function(h,...){
+    if(isExtant(parsetwin)==FALSE)
+    {
+      parsetwin<-gwindow("Parameter Setting",visible=FALSE,width=260,height=280)
+      gpar<-ggroup(container=parsetwin,expand=FALSE)
+    }
+    lytpar<-glayout(container=gpar,spacing=13)
+    mrenv$pvallabel<-glabel("1. Critical P-value in rMLM:",container=lytpar)
+    mrenv$pvaledit<-gedit("0.01",width=20,coerce.with=as.numeric,container=lytpar)
+    mrenv$radlabel<-glabel("2. Search radius of candidate gene (kb):",container=lytpar)
+    mrenv$radedit<-gedit("20",width=20,coerce.with=as.numeric,container=lytpar)
+    mrenv$mlodlabel<-glabel("3. Critical LOD score in mrMLM:",container=lytpar)
+    mrenv$mlodedit<-gedit("3",width=20,coerce.with=as.numeric,container=lytpar)
+    mrenv$okpar<-gbutton("     OK    ",container=lytpar)
+    mrenv$cancelpar<-gbutton(" Cancel ",container=lytpar)
+    lytpar[1,1:5]<-mrenv$pvallabel
+    lytpar[2,1:5]<-mrenv$pvaledit
+    lytpar[3,1:5]<-mrenv$radlabel
+    lytpar[4,1:5]<-mrenv$radedit
+    lytpar[5,1:5]<-mrenv$mlodlabel
+    lytpar[6,1:5]<-mrenv$mlodedit
+    lytpar[7,1]<-mrenv$okpar
+    lytpar[7,4]<-mrenv$cancelpar
+    visible(parsetwin)<-TRUE
+    addHandlerClicked(mrenv$okpar,handler=function(h,...){
+      mrenv$svpal<-svalue(mrenv$pvaledit)
+      mrenv$svrad<-svalue(mrenv$radedit)
+      mrenv$svmlod<-svalue(mrenv$mlodedit)
+      if((mrenv$svpal<0)||(mrenv$svpal>1))
+      {
+        gmessage("Please input critical P-value more than 0 and less than 1!","Warning",icon="warning")
+        return
+      }
+      if(mrenv$svrad<0)
+      {
+        gmessage("Please input search radius of candidate gene more than 0!","Warning",icon="warning")
+        return
+      }
+      if(mrenv$svmlod<0)
+      {
+        gmessage("Please input critical LOD score more than 0!","Warning",icon="warning")
+        return
+      }
+      if((mrenv$svpal>0)&&(mrenv$svpal<1)&&(mrenv$svrad>=0)&&(mrenv$svmlod>=0))
+      {
+        dispose(parsetwin)
+      }
+    })
+    
+    addHandlerClicked(mrenv$cancelpar,handler=function(h,...){
+      mrenv$svpal<-svalue(mrenv$pvaledit)
+      mrenv$svrad<-svalue(mrenv$radedit)
+      mrenv$svmlod<-svalue(mrenv$mlodedit)
+      dispose(parsetwin)
+    })
+  })
+    
   addHandlerClicked(exit,handler=function(h,...){
     gconfirm("Yes or no?",handler=function(h,...){dispose(window)})
   })
@@ -428,6 +500,8 @@ mrMLM<-function(){
       }
       mrenv$parms<-ll
       mrenv$parms<-matrix(mrenv$parms,,10)
+      colnames(mrenv$parms)<-c("Trait","Chromosome","Position","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","P_wald")
+      tbdfe4<-gdfedit(mrenv$parms,container=nb1,expand=TRUE,label="Result1")
       
       multinormal<-function(y,mean,sigma)
       {
@@ -461,7 +535,8 @@ mrMLM<-function(){
         {
           for(i in 1:at1)
           {
-            ij<-which(sub!=sub[i+1])
+            #ij<-which(sub!=sub[i+1])
+            ij<-which(sub!=sub[i+ncol(xxn)])
             ad1<-ad[,ij]
             #if(abs(det(crossprod(ad1,ad1)))<1e-6)
             if(abs(min(eigen(crossprod(ad1,ad1))$values))<1e-6)
@@ -553,60 +628,71 @@ mrMLM<-function(){
           t<-abs(u[i])/stderr
           f<-t*t
           p<-1-pchisq(f,1)
-          wang[i]<- p
+          wang[i]<-p
         }
         return (wang)
       }
       
-      gen <- t(gen)
-      cccc<-mrenv$parms[,2:3]
-      h0<-which(mrenv$parms[,10]<=0.01)
-      h0<-as.matrix(h0)
-      hh<-nrow(h0)
-      aa<-cbind((1:(nrow(mrenv$parms))),mrenv$parms[,10])
-      aa0<-order(aa[,2])
-      aa<-aa[aa0,]
-      cc<-aa[1:hh,]
-      name<-aa[1:hh,1]
-      name<-as.matrix(name)
-      w0<-cbind(mrenv$parms[,6],mrenv$parms[,8])
-      ww0<-matrix(1,(nrow(w0)),1)-w0[,2]*w0[,2]/w0[,1]
-      k0<-which(ww0<0)
+      gen<-t(gen) 
+      chr_pos<-mrenv$parms[,2:3]
+      pfit<-which(mrenv$parms[,10]<=(mrenv$svpal))
+      pfit<-as.matrix(pfit)
+      pfitrow<-nrow(pfit)
+      no_p<-cbind((1:(nrow(mrenv$parms))),mrenv$parms[,10])
+      no_porder<-order(no_p[,2])
+      no_p<-no_p[no_porder,]
+      choose_orderp<-no_p[1:pfitrow,]
+      orderno<-no_p[1:pfitrow,1]
+      orderno<-as.matrix(orderno)
+      sigma2g_SNPerr<-cbind(mrenv$parms[,6],mrenv$parms[,8])
+      correct_each<-matrix(1,(nrow(sigma2g_SNPerr)),1)-sigma2g_SNPerr[,2]*sigma2g_SNPerr[,2]/sigma2g_SNPerr[,1]
+      k0<-which(correct_each<0)
       k0<-as.matrix(k0)
-      if (nrow(k0)>0){ww0[k0,1]<-matrix(0,(nrow(k0)),1)}
-      nn<-sum(ww0)
-      pp<-0.05/nn
-      aa0<-which(aa[,2]<=pp)
-      aa0<-as.matrix(aa0)
-      a0<-nrow(aa0)
-      gg<-name
-      for (ii in 1:(nrow(name)-1)){
-        for (jj in (ii+1):(nrow(name))){
-          ci<- cccc[name[ii],1]
-          cj<- cccc[name[jj],1]
+      if(nrow(k0)>0){
+        correct_each[k0,1]<-matrix(0,(nrow(k0)),1)
+      }
+      correct_sum<-sum(correct_each)
+      newp<-0.05/correct_sum
+      no_porder<-which(no_p[,2]<=newp)
+      no_porder<-as.matrix(no_porder)
+      no_porderrow<-nrow(no_porder)
+      gg<-orderno
+      for (ii in 1:(nrow(orderno)-1)){
+        for (jj in (ii+1):(nrow(orderno))){
+          ci<- chr_pos[orderno[ii],1]
+          cj<- chr_pos[orderno[jj],1]
           if (ci==cj){
-            ye<-abs(cccc[name[ii],2]-cccc[name[jj],2])
-            if (ye<=20000){gg[jj,1]=0}
+            ye<-abs(chr_pos[orderno[ii],2]-chr_pos[orderno[jj],2])
+            if (ye<=((mrenv$svrad)*1000)){
+              gg[jj,1]<-0
+            }
           }
         }
       }
       progress_bar$setFraction(95/100)
       gg<-as.matrix(gg)
       misfit<-numeric()
-      kk<- numeric
-      kk0<- numeric
-      l0<- numeric
-      bong<-a0
+      kk<- numeric()
+      kk0<- numeric()
+      l0<- numeric()
+      bong<-no_porderrow
       if (bong>0){
-        g0<-gg[1:a0,1]
+        g0<-gg[1:no_porderrow,1]
         g0<-as.matrix(g0)
-        kk0<-a0
-        a0<-which(g0>0)
-        a0<-as.matrix(a0)
-        g0<-g0[a0,1]
+        kk0<-no_porderrow
+        no_porderrow<-which(g0>0)
+        no_porderrow<-as.matrix(no_porderrow)
+        g0<-g0[no_porderrow,1]
         g0<-as.matrix(g0)
-        xxx0<-t(gen[g0,])
-        xxx0<-as.matrix(xxx0)
+        xxx0<-gen[g0,]
+        if(bong==1){
+          xxx0<-as.matrix(xxx0)
+        }
+        if(bong>1)
+        {
+          xxx0<-as.matrix(xxx0)
+          xxx0<-t(xxx0)
+        }
         phe<-as.matrix(phe)
         if((flagps==1)||(exists("psmatrix")==FALSE))
         {
@@ -638,9 +724,9 @@ mrMLM<-function(){
         kk0<-0
         kk<-0
       }
-      ne<-as.matrix(gg[(kk0+1):(nrow(gg)),1])
-      if ((length(misfit))>0){gg<-rbind(ne,misfit)}
-      if ((length(misfit))==0){gg<-ne}
+      nleft<-as.matrix(gg[(kk0+1):(nrow(gg)),1])
+      if ((length(misfit))>0){gg<-rbind(nleft,misfit)}
+      if ((length(misfit))==0){gg<-nleft}
       a1<-which(gg>0)
       a1<-as.matrix(a1)
       a2<-gg[a1,1]
@@ -650,21 +736,35 @@ mrMLM<-function(){
       if((flagps==1)||(exists("psmatrix")==FALSE))
       {
         if (length(kk)>1){xin<-cbind(matrix(1,(nrow(xx)),1),xx0)}
-        if (length(kk)==1){xin<- matrix(1,(nrow(xx)),1)}
+        if (length(kk)==1){
+          if(kk==0){
+            xin<- matrix(1,(nrow(xx)),1)
+          }
+          if(kk>0){
+            xin<-cbind(matrix(1,(nrow(xx)),1),xx0)
+          }
+        }
       }else if(flagps==0)
       {
         temp<-cbind(matrix(1,(nrow(xx)),1),psmatrix)
         if (length(kk)>1){xin<-cbind(temp,xx0)}
-        if (length(kk)==1){xin<-temp}
+        if (length(kk)==1){
+          if(kk==0){
+            xin<-temp
+          }
+          if(kk>0){
+            xin<-cbind(temp,xx0)
+          }
+        }
       }
       xin<-as.matrix(xin)
       par<-ebayes_EM(xin,xx,phe)
       w2<-which(par[,1]<=0.01)
       w2<-as.matrix(w2)
-      ww<- numeric
+      ww<- numeric()
       if ((nrow(w2))>0){
-        name<-a2[w2,1]
-        name<-as.matrix(name)
+        orderno<-a2[w2,1]
+        orderno<-as.matrix(orderno)
         x3<-cbind(xin,xx[,w2])
         x3<-as.matrix(x3)
         lodfix<-matrix(x3[,1],nrow(x3),)
@@ -677,26 +777,32 @@ mrMLM<-function(){
           temp<-cbind(psmatrix,lodfix)
           lod<-likelihood(temp,lodrand,phe)
         }
-        w3<-which(lod[,1]>=3)
+        w3<-which(lod[,1]>=(mrenv$svmlod))
         w3<-as.matrix(w3)
         if ((kk[1])>0){
           g0<-as.matrix(g0)
-          name<-rbind(g0,name)
-          name<-as.matrix(name)
-          if ((w3[1])>0){
-            lo<-lod[w3,1]
-            tpww<-which(w3<dim(name)[1])
-            w3<-as.matrix(w3[tpww])
-            ww<-name[w3,]
-          }
-          if ((nrow(w3))==0){ww<-0}
+          orderno<-rbind(g0,orderno)
+          orderno<-as.matrix(orderno)
         }
-        if (length(kk)==1){ww<-0}
+        if ((w3[1])>0){
+          if((flagps==1)||(exists("psmatrix")==FALSE))
+          {
+            lo<-lod[w3,1]
+            ww<-orderno[w3,]
+          }else if(flagps==0)
+          {
+            lo<-lod[w3,1]
+            no_loc<-w3-ncol(psmatrix)
+            ww<-orderno[no_loc,]
+          }
+        }
+        if ((nrow(w3))==0){ww<-0}
+        #if (length(kk)==1){ww<-0}
       }
       if ((nrow(w2))==0){
         g0<-as.matrix(g0)
         lo<-as.matrix(lo)
-        yang<-which(lo>=3)
+        yang<-which(lo>=(mrenv$svmlod))
         yang<-as.matrix(yang)
         if ((nrow(yang))>0){
           ww<-g0[yang,1]
@@ -706,23 +812,66 @@ mrMLM<-function(){
       }
       ww<-as.matrix(ww)
       if (length(ww)>1){
-        ex<-cbind(matrix(1,(nrow(xx)),1),t(gen[ww,]))
+        if((flagps==1)||(exists("psmatrix")==FALSE))
+        {
+          ex<-cbind(matrix(1,(nrow(xx)),1),t(gen[ww,]))
+        }else if(flagps==0)
+        {
+          ex<-cbind(cbind(matrix(1,(nrow(xx)),1),psmatrix),t(gen[ww,]))
+        }
         ex<-as.matrix(ex)
         cui<-det(t(ex)%*%ex)
         p1<-rep(1,ncol(ex))
         p2<-diag(p1)
         if (cui<1e-6){bbbb<-solve(t(ex)%*%ex+p2*0.01)%*%t(ex)%*%phe}
         if (cui>=1e-6){ bbbb<-solve(t(ex)%*%ex)%*%t(ex)%*%phe }
-        eeff<-bbbb[2:(nrow(bbbb)),1]
-        mrenv$wan<-cbind(cccc[ww,],eeff,lo)
-        colnames(mrenv$wan)<-c("Chromosome","Position","Effect","Lod")
+        if((flagps==1)||(exists("psmatrix")==FALSE))
+        {
+          eeff<-bbbb[2:(nrow(bbbb)),1]
+        }else if(flagps==0)
+        {
+          eeff<-bbbb[(2+ncol(psmatrix)):(nrow(bbbb)),1]
+        }
+        
+        eeff<-as.matrix(eeff)
+        er<-as.numeric()
+        her<-as.numeric()
+        if((flagps==1)||(exists("psmatrix")==FALSE))
+        {
+          excol<-ncol(ex)
+          for(i in 1:(excol-1))
+          {
+            em<-ex[,(1+i)]
+            as1<-length(which(em==1))/nrow(ex)
+            as2<-1-as1
+            er<-rbind(er,(1-(as1-as2)*(as1-as2))*eeff[i]*eeff[i])
+          }
+          v0<-(1/(nrow(ex)-1))*(t(phe-ex%*%bbbb)%*%(phe-ex%*%bbbb))
+          her<-er/as.numeric(sum(er)+v0)
+        }else if(flagps==0)
+        {
+          excol<-ncol(ex)
+          for(i in 1:(excol-1-ncol(psmatrix)))
+          {
+            em<-ex[,(1+ncol(psmatrix)+i)]
+            as1<-length(which(em==1))/nrow(ex)
+            as2<-1-as1
+            er<-rbind(er,(1-(as1-as2)*(as1-as2))*eeff[i]*eeff[i])
+          }
+          v0<-(1/(nrow(ex)-1))*(t(phe-ex%*%bbbb)%*%(phe-ex%*%bbbb))
+          her<-er/as.numeric(sum(er)+v0)
+        }
+        
+        mrenv$wan<-cbind(chr_pos[ww,],eeff,lo,her)
+        mrenv$wan<-matrix(mrenv$wan,dim(mrenv$wan)[1],)
+        colnames(mrenv$wan)<-c("Chromosome","Position","QTN effect","LOD score","R2")
       }
       wan<-mrenv$wan
       if(exists("wan")==FALSE||is.null(wan)==TRUE)
       {
-        gmessage("There is no result meets the requirements !","Info",icon="info")
+        gmessage("There is no result meets the requirements in the second step!","Info",icon="info")
       }else{
-        tbdfe4<-gdfedit(wan,container=nb1,expand=TRUE,label="Result")
+        tbdfe5<-gdfedit(wan,container=nb1,expand=TRUE,label="Result2")
       }
       progress_bar$setFraction(100/100)
       progress_bar$setText("All done.")
@@ -731,18 +880,53 @@ mrMLM<-function(){
   })
   
   addHandlerClicked(savefile,handler=function(h,...){
-    wan<-mrenv$wan
-    if(exists("wan")==FALSE||is.null(wan)==TRUE)
+    if(isExtant(choicesave)==FALSE)
     {
-      gmessage("There is no result meets the requirements !","Info",icon="info")
-    }else{
-      output<-gfile(text="Save a file...",type="save",
-                    filter=list("All files"=list(patterns=c("*")),
-                                "CSV files"=list(patterns=c("*.csv"))))
-      write.table(wan,output,sep = ",",row.names=FALSE,col.names = FALSE) 
+      choicesave<-gwindow("Save as ...",visible=FALSE,width=250,height=150)
+      gcsave<-ggroup(container=choicesave,expand=FALSE)
     }
-  })
-  
+    lytsavere<-glayout(container=gcsave,spacing=13)
+    mrenv$oksa<-gbutton("     OK    ",container=lytsavere)
+    mrenv$cancelsa<-gbutton(" Cancel ",container=lytsavere)
+    mrenv$radiosa<-gradio(c("Result1","Result2"),selected=1,horizontal=FALSE,container=lytsavere)
+    lytsavere[2:3,2:5]<-mrenv$radiosa
+    lytsavere[5,3]<-mrenv$oksa
+    lytsavere[5,5]<-mrenv$cancelsa
+    visible(choicesave)<-TRUE
+    
+    addHandlerClicked(mrenv$oksa,handler=function(h,...){
+      if(svalue(mrenv$radiosa)=="Result1"){
+        parms<-mrenv$parms
+        if(exists("parms")==FALSE||is.null(parms)==TRUE)
+        {
+          gmessage("There is something wrong in the first step!","Info",icon="info")
+          return
+        }else{
+          output<-gfile(text="Save a file...",type="save",
+                        filter=list("All files"=list(patterns=c("*")),
+                                    "CSV files"=list(patterns=c("*.csv"))))
+          write.table(parms,output,sep = ",",row.names=FALSE,col.names = TRUE) 
+        }
+      }else{
+        wan<-mrenv$wan
+        if(exists("wan")==FALSE||is.null(wan)==TRUE)
+        {
+          gmessage("There is no result meets the requirements in the second step!","Info",icon="info")
+          return
+        }else{
+          output<-gfile(text="Save a file...",type="save",
+                        filter=list("All files"=list(patterns=c("*")),
+                                    "CSV files"=list(patterns=c("*.csv"))))
+          write.table(wan,output,sep = ",",row.names=FALSE,col.names = TRUE) 
+        }
+      }
+    })
+    
+    addHandlerClicked(mrenv$cancelsa,handler=function(h,...){
+      dispose(choicesave)
+    })
+  })  
+
   addHandlerClicked(manhattan,handler=function(h,...){
     if((exists("svgwline")==FALSE)||(svalue(gwedit)<=0))
     {
@@ -759,7 +943,7 @@ mrMLM<-function(){
       }
       addHandlerChanged(ggpw, handler=function(h,...) {
         parms<-as.data.frame(mrenv$parms)
-        plotman<-manhattan(parms,chr = "V2",bp ="V3",p ="V10",snp="v5",suggestiveline=FALSE,genomewideline = mrenv$standline)
+        plotman<-manhattan(parms,chr = "Chromosome",bp ="Position",p ="P_wald",snp="Sigma2",suggestiveline=FALSE,genomewideline = mrenv$standline)
       })
       visible(plotwin)<-TRUE
     }
