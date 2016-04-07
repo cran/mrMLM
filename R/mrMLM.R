@@ -19,7 +19,10 @@ mrMLM<-function(){
     return(obj)
   }
   
-  window<-gwindow(title="Multilocus Random-SNP-effect Mixed Linear Model (mrMLM)",visible=TRUE,width=1240,height=730,expand=TRUE)
+  window<-gwindow(title="Multilocus Random-SNP-effect Mixed Linear Model (mrMLM)",visible=TRUE,width=1260,height=730,expand=TRUE)
+  importwin<-gwindow("Input Dataset",visible=FALSE,width=250,height=420)
+  gimpwin<-ggroup(container=importwin,expand=FALSE)
+  
   plotwin<-gwindow("Manhattan Plot",visible=FALSE,width=600,height=360)
   gpw<-ggroup(container=plotwin)
   ggpw<-ggraphics(container=gpw)
@@ -37,10 +40,7 @@ mrMLM<-function(){
   
   lyt<-glayout(container=window,spacing=13)
   
-  genotype<-gbutton("Genotype",container=lyt)
-  phenotype<-gbutton("Phenotype",container=lyt)
-  kinship<-gbutton("Kinship",container=lyt)
-  population<-gbutton("Population Structure",container=lyt)
+  importdata<-gbutton("Input Dataset",container=lyt)
   parset<-gbutton("Parameter Setting",container=lyt)
   manhattan<-gbutton("Manhattan Plot",container=lyt)
   qqplot<-gbutton("QQ Plot",container=lyt)
@@ -48,27 +48,24 @@ mrMLM<-function(){
   savefile<-gbutton(" Save ",container=lyt)
   run<-gbutton("Run",container=lyt)
   exit<-gbutton("Exit",container=lyt)
-  gwline<-glabel("Critical value for -logP",container=lyt)
+  gwline<-glabel("Critical value for Manhattan Plot",container=lyt)
   gwedit<-gedit("3",width=20,coerce.with=as.numeric,container=lyt)
   svgwline<-svalue(gwedit)
   gwstandp<-glabel("Critical P-value for QQ plot",container=lyt)
   gwedit1<-gedit("0.992",width=20,coerce.with=as.numeric,container=lyt)
   svgwstandp<-svalue(gwedit1)
   
-  lyt[1,1]<-genotype
-  lyt[2,1]<-phenotype
-  lyt[3,1]<-kinship
-  lyt[4,1]<-population
-  lyt[7,1]<-parset
-  lyt[8,1]<-run
-  lyt[9,1]<-savefile
-  lyt[12,1]<-gwline
-  lyt[13,1]<-gwedit
-  lyt[14,1]<-manhattan
-  lyt[15,1]<-gwstandp
-  lyt[16,1]<-gwedit1
-  lyt[17,1]<-qqplot
-  lyt[20,1]<-exit
+  lyt[1,1]<-importdata
+  lyt[4,1]<-parset
+  lyt[5,1]<-run
+  lyt[6,1]<-savefile
+  lyt[9,1]<-gwline
+  lyt[10,1]<-gwedit
+  lyt[11,1]<-manhattan
+  lyt[12,1]<-gwstandp
+  lyt[13,1]<-gwedit1
+  lyt[14,1]<-qqplot
+  lyt[17,1]<-exit
   
   nb1<-gnotebook(tab.pos=3,closebuttons=TRUE,dontCloseThese=TRUE,container=lyt,expand=TRUE)
   size(nb1)<-c(680,540)
@@ -78,10 +75,10 @@ mrMLM<-function(){
                 2. Please cite: Wang Shi-Bo, Feng Jian-Ying, Ren Wen-Long, Huang Bo, Zhou Ling, Wen Yang-Jun, Zhang Jin, Jim M. Dunwell, Xu Shizhong (*), Zhang Yuan-Ming (*). 2016. 
                 Improving power and accuracy of genome-wide association studies via a multi-locus mixed linear model methodology.Scientific Reports 6: 19444. 
                 
-                3. The software package is developed by Wen-Long Ren, Shi-Bo Wang & Yuan-Ming Zhang.
+                3. The software package is developed by Wen-Long Ren, Shi-Bo Wang, Bo Huang & Yuan-Ming Zhang.
                 
                 
-                Version 1.1, Realeased March 2016",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
+                Version 1.2, Realeased April 2016",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
   
   
   lyt[1:20,2,expand=TRUE]<-nb1
@@ -90,141 +87,392 @@ mrMLM<-function(){
   lyt[21,2,expand=TRUE]<-staprogress
   
   
-  addHandlerClicked(genotype,handler=function(h,...){
-    mrenv$flagps<-1
-    input1<-gfile(text="Select a file...",type="open",
-                  filter=list("All files"=list(patterns=c("*")),
-                              "CSV files"=list(patterns=c("*.csv"))))
+  addHandlerClicked(importdata,handler=function(h,...){
+    if(isExtant(importwin)==FALSE)
+    {
+      importwin<-gwindow("Import Dataset",visible=FALSE,width=250,height=420)
+      gimpwin<-ggroup(container=importwin,expand=FALSE)
+    }
+    lytimp<-glayout(container=gimpwin,spacing=13)
+    impchoose<-glabel("1. Choose dataset format",container=lytimp)
+    impfile1<-glabel("2. Input Genotypic and Phenotypic files",container=lytimp)
+    impprepare<-glabel("3. Sort & Transform for dataset",container=lytimp)
+    impfile2<-glabel("4. Input Kinship and Population-structure files",container=lytimp)
+    radioimp<-gradio(c("mrMLM numeric format","mrMLM character format","Hapmap (TASSEL) format"),selected=3,horizontal=FALSE,container=lytimp)
+    genotype<-gbutton("Genotype",container=lytimp)
+    phenotype<-gbutton("Phenotype",container=lytimp)
+    kinship<-gbutton("Kinship",container=lytimp)
+    population<-gbutton("Population Structure",container=lytimp)
+    preimp<-gbutton("Do",container=lytimp)
+    lytimp[1,2:5]<-impchoose
+    lytimp[2:4,2:5]<-radioimp
+    lytimp[5,2:5]<-impfile1
+    lytimp[6,2:4]<-genotype
+    lytimp[7,2:4]<-phenotype
+    lytimp[8,2:5]<-impprepare
+    lytimp[9,2:4]<-preimp
+    lytimp[10,2:5]<-impfile2
+    lytimp[11,2:4]<-kinship
+    lytimp[12,2:4]<-population
+    visible(importwin)<-TRUE
     
-    if(is.na(input1))
-    {
-      gmessage("Please input correct genotype data !","Warning",icon="warning")
-      return
-    }else{
-      mrenv$gen<-as.matrix(read.csv(input1,header=F))
-      tbdfe1<-gdfedit(mrenv$gen,container=nb1,expand=TRUE,label="Genotype") 
-    }
-  })
-  
-  
-  addHandlerClicked(kinship,handler=function(h,...){
-    if(isExtant(choicekk)==FALSE)
-    {
-      choicekk<-gwindow("Choose Kinship option",visible=FALSE,width=320,height=150)
-      gkk<-ggroup(container=choicekk,expand=FALSE)
-    }
-    lytkk<-glayout(container=gkk,spacing=13)
-    mrenv$okkk<-gbutton("     OK    ",container=lytkk)
-    mrenv$cancelkk<-gbutton(" Cancel ",container=lytkk)
-    mrenv$radiokk<-gradio(c("Input the Kinship matrix file","Calculate the Kinship matrix by this software"),selected=1,horizontal=FALSE,container=lytkk)
-    lytkk[2:3,2:5]<-mrenv$radiokk
-    lytkk[5,2]<-mrenv$okkk
-    lytkk[5,5]<-mrenv$cancelkk
-    visible(choicekk)<-TRUE
-    addHandlerClicked(mrenv$okkk,handler=function(h,...){
+    addHandlerClicked(genotype,handler=function(h,...){
+      mrenv$flagps<-1
+      input1<-gfile(text="Select a file...",type="open",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+        
+      if(is.na(input1))
+      {
+        gmessage("Please input correct genotype data !","Warning",icon="warning")
+        return
+       }else{
+         mrenv$genRaw<-as.matrix(read.csv(input1,header=FALSE))
+         showgenRaw<-mrenv$genRaw[-1,]
+         colnames(showgenRaw)<-mrenv$genRaw[1,]
+         showgenRaw<-as.data.frame(showgenRaw)
+         tbdfe1<-gdfedit(showgenRaw,container=nb1,expand=TRUE,label="Raw_Genotype") 
+      }
+    })
+    
+    addHandlerClicked(phenotype,handler=function(h,...){
+      input2<-gfile(text="Select a file...",type="open",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+      if(is.na(input2))
+      {
+        gmessage("Please input correct phenotype data !","Warning",icon="warning")
+        return
+      }else{
+        mrenv$pheRaw<-as.matrix(read.csv(input2,header=FALSE)) 
+        showpheRaw<-mrenv$pheRaw[-1,]
+        colnames(showpheRaw)<-c(mrenv$pheRaw[1,1],"   ")
+        showpheRaw<-as.data.frame(showpheRaw)
+        tbdfe2<-gdfedit(showpheRaw,container=nb1,expand=TRUE,label="Raw_Phenotype")
+      }
+    })
+    
+    addHandlerClicked(preimp,handler=function(h,...){
+      if(svalue(radioimp)=="mrMLM numeric format"){
+        mrenv$inputform<-1
+        nameGen <- as.matrix(mrenv$genRaw[1,],1,)
+        namePhe <- as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName <- intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen <- match(mrenv$sameName,nameGen)
+        locPhe <- match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName <- matrix(c("rs#","chrom","pos","genotype for code 1"),1,)
+        hapHave <- intersect(nameGen,hapName)
+        locHap <- match(hapHave,nameGen)
+        newGenloc <- c(locHap,locGen)
+        newPheloc <- locPhe
+        newGen <- as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe <- as.matrix(mrenv$pheRaw[newPheloc,])
+        nnhap <- length(hapHave)
+        rownewGen <- dim(newGen)[1]
+        colnewGen <- dim(newGen)[2]
+        rownewPhe <- dim(newPhe)[1]
+        ###########To show on the table ----newGen
+        mrenv$newGen <-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----gen
+        locChr <- as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos <- as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc <- c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen <- mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }else if(svalue(radioimp)=="mrMLM character format"){
+        mrenv$inputform<-2
+        ##########To find the same name between genotype and phenotype
+        nameGen <- as.matrix(mrenv$genRaw[1,],1,)
+        namePhe <- as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName <- intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen <- match(mrenv$sameName,nameGen)
+        locPhe <- match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName <- matrix(c("rs#","chrom","pos"),1,)
+        hapHave <- intersect(nameGen,hapName)
+        locHap <- match(hapHave,nameGen)
+        newGenloc <- c(locHap,locGen)
+        newPheloc <- locPhe
+        newGen <- as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe <- as.matrix(mrenv$pheRaw[newPheloc,])
+        ##########Transfer ATCG to numeric
+        nnhap <- length(hapHave)
+        rownewGen <- dim(newGen)[1]
+        colnewGen <- dim(newGen)[2]
+        rownewPhe <- dim(newPhe)[1]
+        computeGen <- newGen[,(nnhap+1):colnewGen]
+        colComGen <- ncol(computeGen) 
+        referSam <- as.vector(computeGen[,1])
+        ATCGloc <- c(which(computeGen[,1]=="A"),which(computeGen[,1]=="T"),which(computeGen[,1]=="C"),which(computeGen[,1]=="G"))
+        NNRRloc <- setdiff(c(1:rownewGen),ATCGloc)
+        for(i in 2:colComGen)
+        {
+          if(length(NNRRloc)>0){
+            referSam[NNRRloc] <- as.vector(computeGen[NNRRloc,i])
+            ATCGlocLoop <- c(which(computeGen[NNRRloc,i]=="A"),which(computeGen[NNRRloc,i]=="T"),which(computeGen[NNRRloc,i]=="C"),which(computeGen[NNRRloc,i]=="G"))
+            NNRRloc <- setdiff(NNRRloc,NNRRloc[ATCGlocLoop]) 
+          }else{
+            break
+          }
+        }
+        for(i in 1:rownewGen)
+        {
+          tempSel1 <- as.vector(c(which(computeGen[i,]=="A"),which(computeGen[i,]=="T"),which(computeGen[i,]=="C"),which(computeGen[i,]=="G")))
+          tempSel2 <- as.vector(c(which(computeGen[i,]==referSam[i])))
+          notRef <- setdiff(tempSel1,tempSel2)
+          notATCG <- setdiff(c(1:colComGen),tempSel1)
+          computeGen[i,tempSel2] <- as.numeric(1)
+          computeGen[i,notRef] <- as.numeric(-1)
+          computeGen[i,notATCG] <- as.numeric(0)
+        }
+        mrenv$outATCG<-referSam
+        ###########To show on the table ----newGen
+        newGen <- cbind(newGen[,1:nnhap],computeGen)
+        mrenv$newGen <-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----gen
+        locChr <- as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos <- as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc <- c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen<-mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }else if(svalue(radioimp)=="Hapmap (TASSEL) format"){
+        mrenv$inputform<-3
+        ##########To find the same name between genotype and phenotype
+        nameGen<-as.matrix(mrenv$genRaw[1,],1,)
+        namePhe<-as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName<-intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen<-match(mrenv$sameName,nameGen)
+        locPhe<-match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName<-matrix(c("rs#","alleles","chrom","pos","strand","assembly#","center","protLSID","assayLSID","panel","QCcode"),1,)
+        hapHave<-intersect(nameGen,hapName)
+        locHap<-match(hapHave,nameGen)
+        newGenloc<-c(locHap,locGen)
+        newPheloc<-locPhe
+        newGen<-as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe<-as.matrix(mrenv$pheRaw[newPheloc,])   
+        ##########Transfer ATCG to numeric
+        nnhap<-length(hapHave)
+        rownewGen<-dim(newGen)[1]
+        colnewGen<-dim(newGen)[2]
+        rownewPhe<-dim(newPhe)[1]
+        computeGen<-newGen[,(nnhap+1):colnewGen]
+        colComGen<-ncol(computeGen) 
+        referSam<-as.vector(computeGen[,1])
+        ATCGloc<-c(which(computeGen[,1]=="AA"),which(computeGen[,1]=="TT"),which(computeGen[,1]=="CC"),which(computeGen[,1]=="GG"))
+        NNRRloc<-setdiff(c(1:rownewGen),ATCGloc)
+        for(i in 2:colComGen)
+        {
+          if(length(NNRRloc)>0){
+            referSam[NNRRloc]<-as.vector(computeGen[NNRRloc,i])
+            ATCGlocLoop<-c(which(computeGen[NNRRloc,i]=="AA"),which(computeGen[NNRRloc,i]=="TT"),which(computeGen[NNRRloc,i]=="CC"),which(computeGen[NNRRloc,i]=="GG"))
+            NNRRloc<-setdiff(NNRRloc,NNRRloc[ATCGlocLoop]) 
+          }else{
+            break
+          }
+        }
+        for(i in 1:rownewGen)
+        {
+          tempSel1<-as.vector(c(which(computeGen[i,]=="AA"),which(computeGen[i,]=="TT"),which(computeGen[i,]=="CC"),which(computeGen[i,]=="GG")))
+          tempSel2<-as.vector(c(which(computeGen[i,]==referSam[i])))
+          notRef<-setdiff(tempSel1,tempSel2)
+          notATCG<-setdiff(c(1:colComGen),tempSel1)
+          computeGen[i,tempSel2]<-as.numeric(1)
+          computeGen[i,notRef]<-as.numeric(-1)
+          computeGen[i,notATCG]<-as.numeric(0)
+        }
+        mrenv$outATCG<-referSam
+        ###########To show on the table ----mrenv$newGen
+        newGen<-cbind(newGen[,1:nnhap],computeGen)
+        mrenv$newGen<-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----mrenv$gen
+        locChr<-as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos<-as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc<-c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen<-mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----mrenv$newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----mrenv$phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }
+    })
+    
+    addHandlerClicked(kinship,handler=function(h,...){
+      if(isExtant(choicekk)==FALSE)
+      {
+        choicekk<-gwindow("Choose Kinship option",visible=FALSE,width=320,height=150)
+        gkk<-ggroup(container=choicekk,expand=FALSE)
+      }
+      lytkk<-glayout(container=gkk,spacing=13)
+      mrenv$okkk<-gbutton("     OK    ",container=lytkk)
+      mrenv$cancelkk<-gbutton(" Cancel ",container=lytkk)
+      mrenv$radiokk<-gradio(c("Input the Kinship matrix file","Calculate the Kinship matrix by this software"),selected=1,horizontal=FALSE,container=lytkk)
+      lytkk[2:3,2:5]<-mrenv$radiokk
+      lytkk[5,2]<-mrenv$okkk
+      lytkk[5,5]<-mrenv$cancelkk
+      visible(choicekk)<-TRUE
+      addHandlerClicked(mrenv$okkk,handler=function(h,...){
       if(svalue(mrenv$radiokk)=="Input the Kinship matrix file"){
-        input2<-gfile(text="Select a file...",type="open",
-                      filter=list("All files"=list(patterns=c("*")),
-                                  "CSV files"=list(patterns=c("*.csv"))))
-        if(is.na(input2))
-        {
-          gmessage("Please input correct kinship data !","Warning",icon="warning")
-          return
-        }else{
-          mrenv$kk<-as.matrix(read.csv(input2,header=F)) 
-          tbdfe2<-gdfedit(mrenv$kk,container=nb1,expand=TRUE,label="Kinship")
-          dispose(choicekk)
-        }
-      }else{
-        envgen <- mrenv$gen
-        if(exists("envgen")==FALSE)
-        {
-          gmessage("Please input correct genotype data !","Warning",icon="warning")
-          return
-        }else{
-          envgen<-envgen[,3:(ncol(envgen))]
-          envgen<-t(envgen)
-          m<-ncol(envgen)
-          n<-nrow(envgen)
-          kk1<-matrix(0,n,n)
-          for(k in 1:m){
-            z<-as.matrix(envgen[,k])
-            kk1<-kk1+z%*%t(z)
-          }
-          cc<-mean(diag(kk1))
-          kk1<-kk1/cc
-          mrenv$kk<-kk1
-          rowsize<-dim(mrenv$kk)[1]
-          aa<-as.character()
-          for(i in 1:rowsize)
+          input3<-gfile(text="Select a file...",type="open",
+                        filter=list("All files"=list(patterns=c("*")),
+                                    "CSV files"=list(patterns=c("*.csv"))))
+          if(is.na(input3))
           {
-            a<-paste("V",i,sep="")
-            aa<-c(aa,a)
+            gmessage("Please input correct kinship data !","Warning",icon="warning")
+            return
+          }else{
+            mrenv$kkRaw<-read.csv(input3,header=FALSE)
+            nnkk<-dim(mrenv$kkRaw)[1]
+            mrenv$kkRaw[1,2:nnkk]<-"  "
+            tbdfe5<-gdfedit(mrenv$kkRaw,container=nb1,expand=TRUE,label="Kinship")
+            kkPre<-as.matrix(mrenv$kkRaw[-1,-1])
+            nameKin<-as.matrix(mrenv$kkRaw[-1,1])
+            sameGenKin<-intersect(mrenv$sameName,nameKin)
+            locKin<-match(sameGenKin,nameKin)
+            mrenv$kk<-kkPre[locKin,locKin]
+            mrenv$kk<-matrix(as.numeric(mrenv$kk),nrow=nrow(mrenv$kk))
+            dispose(choicekk)
           }
-          colnames(mrenv$kk)<-aa
-          rownames(mrenv$kk)<-aa
-          tbdfe2<-gdfedit(mrenv$kk,container=nb1,expand=TRUE,label="Kinship")
-          dispose(choicekk)
-        }     
-      }
-    })
-    addHandlerClicked(mrenv$cancelkk,handler=function(h,...){
-      dispose(choicekk)
-    })
-  })
-  
-  addHandlerClicked(phenotype,handler=function(h,...){
-    input3<-gfile(text="Select a file...",type="open",
-                  filter=list("All files"=list(patterns=c("*")),
-                              "CSV files"=list(patterns=c("*.csv"))))
-    if(is.na(input3))
-    {
-      gmessage("Please input correct phenotype data !","Warning",icon="warning")
-      return
-    }else{
-      mrenv$phe<-as.matrix(read.csv(input3,header=F)) 
-      tbdfe3<-gdfedit(mrenv$phe,container=nb1,expand=TRUE,label="Phenotype")
-    }
-  })
-  
-  addHandlerClicked(population,handler=function(h,...){
-    if(isExtant(includeps)==FALSE)
-    {
-      includeps<-gwindow("Include population structure?",visible=FALSE,width=320,height=150)
-      gps<-ggroup(container=includeps,expand=FALSE)
-    }
-    lytps<-glayout(container=gps,spacing=13)
-    okps<-gbutton("     OK    ",container=lytps)
-    cancelps<-gbutton(" Cancel ",container=lytps)
-    radiops<-gradio(c("Population structure has no effect on GWAS","Input Population Structure file"),selected=1,horizontal=FALSE,container=lytps)
-    lytps[2:3,2:5]<-radiops
-    lytps[5,2]<-okps
-    lytps[5,5]<-cancelps
-    visible(includeps)<-TRUE
-    addHandlerClicked(okps,handler=function(h,...){
-      if(svalue(radiops)=="Input Population Structure file"){
-        mrenv$flagps<-0
-        input4<-gfile(text="Select a file...",type="open",
-                      filter=list("All files"=list(patterns=c("*")),
-                                  "CSV files"=list(patterns=c("*.csv"))))
-        if(is.na(input4))
-        {
-          gmessage("Please input correct population data !","Warning",icon="warning")
-          return
         }else{
-          mrenv$psmatrix<-as.matrix(read.csv(input4,header=F)) 
-          tbdfe4<-gdfedit(mrenv$psmatrix,container=nb1,expand=TRUE,label="Population Structure")
-          dispose(includeps)
+          envgen <- mrenv$gen
+          if(exists("envgen")==FALSE)
+          {
+            gmessage("Please input correct genotype data !","Warning",icon="warning")
+            return
+          }else{
+            envgen<-envgen[,3:(ncol(envgen))]
+            envgen<-t(envgen)
+            m<-ncol(envgen)
+            n<-nrow(envgen)
+            kk1<-matrix(0,n,n)
+            for(k in 1:m){
+              z<-as.matrix(envgen[,k])
+              kk1<-kk1+z%*%t(z)
+            }
+            cc<-mean(diag(kk1))
+            kk1<-kk1/cc
+            mrenv$kk<-as.matrix(kk1)
+            rowsize<-dim(mrenv$kk)[1]
+            aa<-as.character()
+            for(i in 1:(rowsize+1))
+            {
+              a<-paste("V",i,sep="")
+              aa<-c(aa,a)
+            }
+            mrenv$kkShow<-cbind(matrix(mrenv$newPhe[-1,1],,1),round(mrenv$kk,5))
+            tempFirst<-rep("  ",rowsize)
+            tempFirst<-c(as.character(rowsize),tempFirst)
+            mrenv$kkShow<-as.matrix(rbind(tempFirst,mrenv$kkShow))
+            colnames(mrenv$kkShow)<-aa
+            rownames(mrenv$kkShow)<-c(1:(rowsize+1))
+            tbdfe5<-gdfedit(mrenv$kkShow,container=nb1,expand=TRUE,label="Kinship")
+            dispose(choicekk)
+          }     
         }
-      }else{
-        mrenv$flagps<-1
-        enabled(population)<-FALSE
-        dispose(includeps)
-      }
+      })
+      addHandlerClicked(mrenv$cancelkk,handler=function(h,...){
+        dispose(choicekk)
+      })
     })
-    addHandlerClicked(cancelps,handler=function(h,...){
-      dispose(includeps)
-    })
+    
+      
+      addHandlerClicked(population,handler=function(h,...){
+        if(isExtant(includeps)==FALSE)
+        {
+          includeps<-gwindow("Include population structure?",visible=FALSE,width=320,height=150)
+          gps<-ggroup(container=includeps,expand=FALSE)
+        }
+        lytps<-glayout(container=gps,spacing=13)
+        okps<-gbutton("     OK    ",container=lytps)
+        cancelps<-gbutton(" Cancel ",container=lytps)
+        radiops<-gradio(c("Population structure has no effect on GWAS","Input Population Structure file"),selected=1,horizontal=FALSE,container=lytps)
+        lytps[2:3,2:5]<-radiops
+        lytps[5,2]<-okps
+        lytps[5,5]<-cancelps
+        visible(includeps)<-TRUE
+        addHandlerClicked(okps,handler=function(h,...){
+          if(svalue(radiops)=="Input Population Structure file"){
+            mrenv$flagps<-0
+            input4<-gfile(text="Select a file...",type="open",
+                          filter=list("All files"=list(patterns=c("*")),
+                                      "CSV files"=list(patterns=c("*.csv"))))
+            if(is.na(input4))
+            {
+              gmessage("Please input correct population data !","Warning",icon="warning")
+              return
+            }else{
+              mrenv$psmatrixRaw<-as.matrix(read.csv(input4,header=FALSE))
+              nnpprow<-dim(mrenv$psmatrixRaw)[1]
+              nnppcol<-dim(mrenv$psmatrixRaw)[2]
+              mrenv$psmatrixRaw[1,2:nnppcol]<-"  "
+              psmatrixPre<-mrenv$psmatrixRaw[3:nnpprow,]
+              namePop<-as.matrix(psmatrixPre[,1])
+              sameGenPop<-intersect(mrenv$sameName,namePop)
+              locPop<-match(sameGenPop,namePop)
+              mrenv$psmatrix<-psmatrixPre[locPop,-1:-2]
+              mrenv$psmatrix<-matrix(as.numeric(mrenv$psmatrix),nrow=nrow(mrenv$psmatrix))
+              tbdfe6<-gdfedit(mrenv$psmatrixRaw,container=nb1,expand=TRUE,label="Population Structure")
+              dispose(includeps)
+              dispose(importwin)
+            }
+          }else{
+            mrenv$flagps<-1
+            enabled(population)<-FALSE
+            dispose(includeps)
+            dispose(importwin)
+          }
+        })
+        addHandlerClicked(cancelps,handler=function(h,...){
+          dispose(includeps)
+        })
+      })
+    
   })
   
   addHandlerClicked(parset,handler=function(h,...){
@@ -500,8 +748,6 @@ mrMLM<-function(){
       }
       mrenv$parms<-ll
       mrenv$parms<-matrix(mrenv$parms,,10)
-      colnames(mrenv$parms)<-c("Trait","Chromosome","Position","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","P_wald")
-      tbdfe4<-gdfedit(mrenv$parms,container=nb1,expand=TRUE,label="Result1")
       
       multinormal<-function(y,mean,sigma)
       {
@@ -632,7 +878,7 @@ mrMLM<-function(){
         }
         return (wang)
       }
-      
+           
       gen<-t(gen) 
       chr_pos<-mrenv$parms[,2:3]
       pfit<-which(mrenv$parms[,10]<=(mrenv$svpal))
@@ -653,6 +899,8 @@ mrMLM<-function(){
       }
       correct_sum<-sum(correct_each)
       newp<-0.05/correct_sum
+      mrenv$mannewp<-newp
+      mrenv$manstandchoice<-1
       no_porder<-which(no_p[,2]<=newp)
       no_porder<-as.matrix(no_porder)
       no_porderrow<-nrow(no_porder)
@@ -670,6 +918,55 @@ mrMLM<-function(){
         }
       }
       progress_bar$setFraction(95/100)
+      if(mrenv$inputform==1){
+        #output result1 using mrMLM numeric format
+        mrenv$parmsShow<-mrenv$parms[,-1]
+        mrenv$parmsShow<-cbind(mrenv$genRaw[-1,1],mrenv$parms[,2:3],round(mrenv$parms[,4:10],5))
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,10)
+        mrenv$parmsShow<-cbind(mrenv$parmsShow,mrenv$genRaw[-1,4])
+        meadd<-matrix(1,nrow(mrenv$parms),1)
+        meadd[which(mrenv$parms[,10]<newp),1]<-round(newp,8)
+        meadd[which(mrenv$parms[,10]>=newp),1]<-"  "
+        mrenv$parmsShow<-cbind(mrenv$parmsShow,meadd)
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,12)
+        colnames(mrenv$parmsShow)<-c("RS#","Chromosome","Position","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","P_wald","Genotype for code 1","Significance")
+        tbdfe7<-gdfedit(mrenv$parmsShow,container=nb1,expand=TRUE,label="Result1")
+      }
+      if(mrenv$inputform==2){
+        #output result1 using mrMLM character format
+        mrenv$parmsShow<-mrenv$parms[,-1]
+        mrenv$parmsShow<-cbind(mrenv$genRaw[-1,1],mrenv$parms[,2:3],round(mrenv$parms[,4:10],5))
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,10)
+        mrenv$outATCG<-matrix(mrenv$outATCG,,1)
+        mrenv$parmsShow<-cbind(mrenv$parmsShow,mrenv$outATCG)
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,11)
+        meadd<-matrix(1,nrow(mrenv$parms),1)
+        meadd[which(mrenv$parms[,10]<newp),1]<-round(newp,8)
+        meadd[which(mrenv$parms[,10]>=newp),1]<-"  "
+        mrenv$parmsShow<-cbind(mrenv$parmsShow,meadd)
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,12)
+        colnames(mrenv$parmsShow)<-c("RS#","Chromosome","Position","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","P_wald","Genotype  for code 1","Significance")
+        tbdfe7<-gdfedit(mrenv$parmsShow,container=nb1,expand=TRUE,label="Result1")
+      }
+      if(mrenv$inputform==3){
+        #output result1 using TASSEL format
+        mrenv$parmsShow<-mrenv$parms[,-1]
+        mrenv$parmsShow<-cbind(mrenv$genRaw[-1,1],mrenv$parms[,2:3],round(mrenv$parms[,4:10],5))
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,10)
+        mrenv$outATCG<-matrix(mrenv$outATCG,,1)
+        mrenv$outATCG<-unlist(strsplit(mrenv$outATCG,""))
+        mrenv$outATCG<-matrix(mrenv$outATCG[c(TRUE,FALSE)],,1)
+        mrenv$parmsShow<-cbind(mrenv$parmsShow,mrenv$outATCG)
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,11)
+        meadd<-matrix(1,nrow(mrenv$parms),1)
+        meadd[which(mrenv$parms[,10]<newp),1]<-round(newp,8)
+        meadd[which(mrenv$parms[,10]>=newp),1]<-"  "
+        mrenv$parmsShow<-cbind(mrenv$parmsShow,meadd)
+        mrenv$parmsShow<-matrix(mrenv$parmsShow,,12)
+        colnames(mrenv$parmsShow)<-c("RS#","Chromosome","Position","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","P_wald","Genotype  for code 1","Significance")
+        tbdfe7<-gdfedit(mrenv$parmsShow,container=nb1,expand=TRUE,label="Result1")
+      }
+      
       gg<-as.matrix(gg)
       misfit<-numeric()
       kk<- numeric()
@@ -685,10 +982,10 @@ mrMLM<-function(){
         g0<-g0[no_porderrow,1]
         g0<-as.matrix(g0)
         xxx0<-gen[g0,]
-        if(bong==1){
+        if(dim(g0)[1]==1){
           xxx0<-as.matrix(xxx0)
         }
-        if(bong>1)
+        if(dim(g0)[1]>1)
         {
           xxx0<-as.matrix(xxx0)
           xxx0<-t(xxx0)
@@ -811,6 +1108,7 @@ mrMLM<-function(){
         if ((nrow(yang))==0){ww<-0}
       }
       ww<-as.matrix(ww)
+      mrenv$needww<-ww
       if (length(ww)>1){
         if((flagps==1)||(exists("psmatrix")==FALSE))
         {
@@ -862,16 +1160,20 @@ mrMLM<-function(){
           her<-er/as.numeric(sum(er)+v0)
         }
         
-        mrenv$wan<-cbind(chr_pos[ww,],eeff,lo,her)
+        mrenv$wan<-cbind(chr_pos[ww,],round(eeff,5),round(lo,5),round(her,5))
         mrenv$wan<-matrix(mrenv$wan,dim(mrenv$wan)[1],)
-        colnames(mrenv$wan)<-c("Chromosome","Position","QTN effect","LOD score","R2")
+
+        mrenv$wan<-cbind(matrix(mrenv$parmsShow[mrenv$needww,1],,1),mrenv$wan,matrix(mrenv$parmsShow[mrenv$needww,11],,1))
+        mrenv$wan<-matrix(mrenv$wan,dim(mrenv$wan)[1],)
+        colnames(mrenv$wan)<-c("RS#","Chromosome","Position","QTN effect","LOD score","R2","Genotype  for code 1")
+        
       }
       wan<-mrenv$wan
       if(exists("wan")==FALSE||is.null(wan)==TRUE)
       {
         gmessage("There is no result meets the requirements in the second step!","Info",icon="info")
       }else{
-        tbdfe5<-gdfedit(wan,container=nb1,expand=TRUE,label="Result2")
+        tbdfe8<-gdfedit(wan,container=nb1,expand=TRUE,label="Result2")
       }
       progress_bar$setFraction(100/100)
       progress_bar$setText("All done.")
@@ -896,7 +1198,7 @@ mrMLM<-function(){
     
     addHandlerClicked(mrenv$oksa,handler=function(h,...){
       if(svalue(mrenv$radiosa)=="Result1"){
-        parms<-mrenv$parms
+        parms<-mrenv$parmsShow
         if(exists("parms")==FALSE||is.null(parms)==TRUE)
         {
           gmessage("There is something wrong in the first step!","Info",icon="info")
@@ -934,7 +1236,13 @@ mrMLM<-function(){
       return
     }else{
       svgwline<-svalue(gwedit)
-      mrenv$standline<-svgwline
+      if(mrenv$manstandchoice==1)
+      {
+        mrenv$standline<--log10(mrenv$mannewp)
+        mrenv$manstandchoice<-mrenv$manstandchoice+1
+      }else{
+        mrenv$standline<-svgwline
+      }
       if(isExtant(plotwin)==FALSE)
       {
         plotwin<-gwindow("Manhattan Plot",visible=FALSE,width=600,height=360)
@@ -942,6 +1250,7 @@ mrMLM<-function(){
         ggpw<-ggraphics(container=gpw)
       }
       addHandlerChanged(ggpw, handler=function(h,...) {
+        colnames(mrenv$parms)<-c("Trait","Chromosome","Position","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","P_wald")
         parms<-as.data.frame(mrenv$parms)
         plotman<-manhattan(parms,chr = "Chromosome",bp ="Position",p ="P_wald",snp="Sigma2",suggestiveline=FALSE,genomewideline = mrenv$standline)
       })
