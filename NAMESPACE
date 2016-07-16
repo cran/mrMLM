@@ -1,7 +1,7 @@
-import("RGtk2","gWidgets","gWidgetsRGtk2","RGtk2Extras","qqman")
-importFrom("graphics","abline","plot")
+import("RGtk2","gWidgets","gWidgetsRGtk2","RGtk2Extras","openxlsx","stringr","ggplot2","qqman")
+importFrom("stats","optim","pchisq","var","na.omit")
+importFrom("utils","read.csv","write.table","RShowDoc")
 importFrom("methods","new")
-importFrom("stats","optim","pchisq","var")
-importFrom("utils","read.csv","write.table")
+importFrom("graphics","plot","abline")
+importFrom("grDevices","dev.off","jpeg","png","tiff")
 export("mrMLM")
-
