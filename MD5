@@ -1,8 +1,8 @@
-748df87ed01d6e3cbbc1d17b174dab2e *DESCRIPTION
-2d04abf7f2b0f9e1cdf10fd815217f7a *NAMESPACE
-fc9ef790d0fd61ee72bb41bcd43cfeb7 *R/mrMLM.R
+f5009a207c8d8078f65db4da2f726fce *DESCRIPTION
+4113b824f003e9fbe1a6153bb6e4f231 *NAMESPACE
+1b2caff2d709a18c9fdb87ff62427687 *R/mrMLM.R
 2e217f9540e74fd99e5e45e8078b0e05 *R/zzz.R
-33046b4509ea6be3ed06695fd7d6f6ca *inst/doc/Instruction.pdf
+d09132f37bee1dccfe7e49417e4910a9 *inst/doc/Instruction.pdf
 0d359ff13faf6853d1ebdb2ab5498a93 *inst/extdata/GCIM_Cov.csv
 23eac9042a4c48d2992539233081f895 *inst/extdata/GCIM_Genotype_Format.csv
 e078b0352cc0c037ef3cc3f64478841b *inst/extdata/GCIM_Linkage_Map_Format.csv
@@ -12,8 +12,8 @@ aad0429f2be587e38849711ba842d5cb *inst/extdata/GWAS_FASTmrEMMA_Numeric_Genotype.
 e27babc70970570be6c5dd5901fa8a07 *inst/extdata/GWAS_Kinship.csv
 0aa3a8430760a7afc35caa245b9b245d *inst/extdata/GWAS_Phenotype.csv
 36ab01f0e0707f7f98d2f509585f2f97 *inst/extdata/GWAS_Population_Structure.csv
-046e9074d42efc64773d89c0e8d3c0c8 *inst/extdata/GWAS_mrMLM_Character_Genotype.csv
+be97d59e31997885bb593eb6bc1bccfc *inst/extdata/GWAS_mrMLM_Character_Genotype.csv
 088d479eae80e2b87ccb8f74fa3f3185 *inst/extdata/GWAS_mrMLM_Numeric_Genotype.csv
 1fd932815eeb5e6cb6927a04cacd4789 *inst/extdata/WheatDH_QTLIciMapping_Format.xlsx
 bdfc583717cc0b1c6762e3f27d7a26dc *inst/extdata/env1-jun3_WinQTLCart_Format.mcd
-1d14bb83b5b35b85530731d8c3407c76 *man/mrMLM-package.Rd
+5e956901d504cdfbe005ef81e68ca881 *man/mrMLM-package.Rd

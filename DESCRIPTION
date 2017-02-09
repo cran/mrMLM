@@ -2,15 +2,15 @@ Package: mrMLM
 Type: Package
 Title: Multi-Locus Random-SNP-Effect Mixed Linear Model for Genome-Wide
         Association Studies and Linkage Analyses
-Version: 2.0
-Date: 2016-12-19
+Version: 2.1
+Date: 2017-02-08
 Author: Wenlong Ren,Yuanli Ni,Shibo Wang,Yangjun Wen,Bo Huang and Yuanming Zhang
 Maintainer: Yuanming Zhang<soyzhang@mail.hzau.edu.cn>
 Description: Conduct multi-locus GWAS and multi-locus QTL mapping under the framework of random-SNP-effect mixed linear model (mrMLM). First, each position (or marker) on the genome is scanned by mrMLM algorithm. Bonferroni correction is replaced by a less stringent selection criterion for significant test. Then, all the markers (or QTL) that are potentially associated with the trait are included in a multi-locus model, their effects are estimated by empirical Bayes and true QTN or QTL are identified by likelihood ratio test.
 Depends: gWidgets,gWidgetsRGtk2,RGtk2Extras,MASS
-Imports: RGtk2,methods,openxlsx,stringr,ggplot2,qqman
+Imports: RGtk2,methods,openxlsx,stringr,qqman,ggplot2,lars,ncvreg
 License: GPL (>= 2)
 NeedsCompilation: no
-Packaged: 2016-12-20 08:33:56 UTC; Graduate
+Packaged: 2017-02-08 14:47:04 UTC; Administrator
 Repository: CRAN
-Date/Publication: 2016-12-20 10:19:38
+Date/Publication: 2017-02-09 07:02:00

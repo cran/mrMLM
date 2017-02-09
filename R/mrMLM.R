@@ -1,5 +1,5 @@
  mrMLM<-function()
-{
+ {
 inte_env <- new.env()
 gnewtable<-function (items, multiple = FALSE, chosencol = 1, icon.FUN = NULL, 
                      filter.column = NULL, filter.labels = NULL, filter.FUN = NULL, 
@@ -19,10 +19,12 @@ gnewtable<-function (items, multiple = FALSE, chosencol = 1, icon.FUN = NULL,
   obj <- new("gTable", widget = widget, toolkit = toolkit)
   return(obj)
 }
-inte_window<-gwindow(title="Methodologies for multi-locus GWAS and multi-locus linkage analysis",visible=TRUE,width=578,height=300,expand=TRUE)
+inte_window<-gwindow(title="Methodologies for multi-locus GWAS and multi-locus linkage analysis",visible=TRUE,width=560,height=450,expand=TRUE)
 inte_lyt<-glayout(container=inte_window,spacing=13)
 mrMLMbutton<-gbutton("multi-locus random-SNP-effect Mixed Linear Model (mrMLM)",container=inte_lyt)
 FASTbutton<-gbutton("FAST multi-locus random-SNP-effect EMMA (FASTmrEMMA)",container=inte_lyt)
+ISISbutton<-gbutton("Iterative Sure Independence Screening EM-Bayesian LASSO (ISIS EM-BLASSO)",container=inte_lyt)
+pLARmEBbutton<-gbutton("polygene-background-control-based least angle regression plus empirical Bayes (pLARmEB)",container=inte_lyt)
 GCIMbutton<-gbutton("Genome-wide Composite Interval Mapping (GCIM)",container=inte_lyt)
 gwasmed<-glabel("Multi-locus GWAS methodologies:")
 linkmed<-glabel("Multi-locus linkage analysis methodologies:")
@@ -30,16 +32,22 @@ inte_lyt[1,1,expand=TRUE]<-gwasmed
 inte_lyt[2,1,expand=TRUE]<-mrMLMbutton
 inte_lyt[3,1,expand=TRUE]<-glabel("Cited: Wang et al. 2016. Sci Rep 6:19444")
 inte_lyt[4,1,expand=TRUE]<-FASTbutton
-inte_lyt[5,1,expand=TRUE]<-glabel("Cited: Wen et al. 2016. Briefings in Bioinformatics, DOI: 10.1093/bib/bbw145")
-inte_lyt[8,1,expand=TRUE]<-linkmed
-inte_lyt[9,1,expand=TRUE]<-GCIMbutton
-inte_lyt[10,1,expand=TRUE]<-glabel("Cited: Wang et al. 2016. Sci Rep 6:29951")
-inte_lyt[13,1,expand=TRUE]<-glabel("Version 2.0, December 2016")
+inte_lyt[5,1,expand=TRUE]<-glabel("Cited: Wen et al. 2017. Briefings in Bioinformatics, DOI: 10.1093/bib/bbw145")
+inte_lyt[6,1,expand=TRUE]<- ISISbutton
+inte_lyt[7,1,expand=TRUE]<-glabel("Cited: Tamba et al. 2017. PLOS Computational Biology, DOI: 10.1371/journal.pcbi.1005357")
+inte_lyt[8,1,expand=TRUE]<- pLARmEBbutton
+inte_lyt[9,1,expand=TRUE]<-glabel("Cited: Zhang et al. 2017. Heredity")
+
+inte_lyt[10,1,expand=TRUE]<-linkmed
+inte_lyt[11,1,expand=TRUE]<-GCIMbutton
+inte_lyt[12,1,expand=TRUE]<-glabel("Cited: Wang et al. 2016. Sci Rep 6:29951")
+inte_lyt[14,1,expand=TRUE]<-glabel("Version 2.1, January 2017")
 font(gwasmed)<-c(size="x-large")
 font(linkmed)<-c(size="x-large")
 
 mrMLMSub<-function(){
   mrenv <- new.env()
+  Sys.setenv(LANGUAGE="en")
   gnewtable<-function (items, multiple = FALSE, chosencol = 1, icon.FUN = NULL, 
                        filter.column = NULL, filter.labels = NULL, filter.FUN = NULL, 
                        handler = NULL, action = NULL, container = NULL, ..., toolkit = guiToolkit()) 
@@ -84,7 +92,7 @@ mrMLMSub<-function(){
   parset<-gbutton("Parameter Settings",container=lyt)
   manhattan<-gbutton("Manhattan Plot",container=lyt)
   qqplot<-gbutton("QQ Plot",container=lyt)
-  
+  clear<-gbutton(" Clear ",container = lyt)
   helpfile<-gbutton("User Manual",container=lyt)
   savefile<-gbutton(" Save ",container=lyt)
   run<-gbutton("Run",container=lyt)
@@ -94,32 +102,99 @@ mrMLMSub<-function(){
   lyt[4,1]<-parset
   lyt[5,1]<-run  
   lyt[6,1]<-savefile
+  lyt[7,1]<-clear
   lyt[9,1]<-manhattan
   lyt[10,1]<-qqplot
   lyt[13,1]<-helpfile
   lyt[14,1]<-exit
   
+  
+  addhandlerclicked(clear,handler = function(h,...){
+    progress_bar$setFraction(0/100)
+    progress_bar$setText("")
+    m<-length(nb1)
+    for(i in 1:(m-1)){
+      if(is.null(mrenv$wan)==FALSE){
+        wan<-NULL
+        svmlod<-NULL
+        svpal<-NULL
+        svrad<-NULL
+        snpname<-NULL
+        rm(snpname,envir = as.environment(mrenv))
+        rm(svrad,envir = as.environment(mrenv))
+        rm(wan,envir = as.environment(mrenv))
+        rm(svmlod,envir = as.environment(mrenv))
+        rm(svpal,envir = as.environment(mrenv))
+      }
+      else if(is.null(mrenv$parmsShow)==FALSE){
+        parmsShow<-NULL
+        parms<-NULL
+        rm(parms,envir = as.environment(mrenv))
+        rm(parmsShow,envir = as.environment(mrenv))
+        
+      }else if(is.null(mrenv$gen)==FALSE){
+        gen<-NULL
+        sameName<-NULL
+        needloc<-NULL
+        needGen<-NULL
+        newPhe<-NULL
+        newGen<-NULL
+        outATCG<-NULL
+        inputform<-NULL
+        genRaw<-NULL
+        pheRaw<-NULL
+        rm(gen,envir = as.environment(mrenv))
+        rm(inputform,envir = as.environment(mrenv))
+        rm(genRaw,envir = as.environment(mrenv))
+        rm(pheRaw,envir = as.environment(mrenv))
+        rm(sameName,envir = as.environment(mrenv))
+        rm(needloc,envir = as.environment(mrenv))
+        rm(needGen,envir = as.environment(mrenv))
+        rm(newPhe,envir = as.environment(mrenv))
+        rm(newGen,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$phe)==FALSE){
+        phe<-NULL
+        rm(phe,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$kk)==FALSE){
+        kkRaw<-NULL
+        kkShow<-NULL
+        kk<-NULL
+        rm(kk,envir = as.environment(mrenv))
+        rm(kkRaw,envir = as.environment(mrenv))
+        rm(kkShow,envir = as.environment(mrenv))
+        
+      }else if(is.null(mrenv$psmatrix)==FALSE){
+        psmatrix<-NULL
+        psmatrixRaw<-NULL
+        flagps<-NULL
+        rm(flagps,envir = as.environment(mrenv))
+        rm(psmatrix,envir = as.environment(mrenv))
+        rm(psmatrixRaw,envir = as.environment(mrenv))
+      }
+      dispose(nb1)
+    }
+  })
+  
   nb1<-gnotebook(tab.pos=3,closebuttons=TRUE,dontCloseThese=TRUE,container=lyt,expand=TRUE)
   size(nb1)<-c(680,540)
   tb<-gnewtable("     
-                1.mrMLM is a R software package for multi-locus genome-wide association studies based on a multi-locus 
-                  random-SNP-effect mixed linear model.
+                1. mrMLM is a R software package for multi-locus genome-wide association studies based on a multi-locus 
+                   random-SNP-effect mixed linear model.
                 
-                2.Please cite: Wang Shi-Bo, Feng Jian-Ying, Ren Wen-Long, Huang Bo, Zhou Ling, Wen Yang-Jun, Zhang Jin, 
-                  Jim M. Dunwell, Xu Shizhong (*), Zhang Yuan-Ming (*).2016. Improving power and accuracy of genome-wide 
-                  association studies via a multi-locus mixed linear model methodology. Scientific Reports 6:19444. 
+                2. Please cite: Wang Shi-Bo, Feng Jian-Ying, Ren Wen-Long, Huang Bo, Zhou Ling, Wen Yang-Jun, Zhang Jin, 
+                   Jim M. Dunwell, Xu Shizhong*, Zhang Yuan-Ming*.2016. Improving power and accuracy of genome-wide 
+                   association studies via a multi-locus mixed linear model methodology. Scientific Reports 6:19444. 
                 
-                3.Please cite: Zhang Yuan-Ming et al. Mapping quantitative trait loci using naturally occurring genetic
-                  variance among commercial inbred line of maize (Zea mays L.). Genetics 2005, 169:2267-2275.
+                3. Please cite: Zhang Yuan-Ming et al. Mapping quantitative trait loci using naturally occurring genetic
+                   variance among commercial inbred line of maize (Zea mays L.). Genetics 2005, 169:2267-2275.
                 
-                4.The software package is developed by Wen-Long Ren, Shi-Bo Wang, Bo Huang & Yuan-Ming Zhang.
-                  ",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
+                4. The software package is developed by Wen-Long Ren, Shi-Bo Wang, Bo Huang & Yuan-Ming Zhang.
+                ",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
   
   font(tb)<-c(size="x-large")
   lyt[1:14,2,expand=TRUE]<-nb1
-  
-  staprogress<-gtkButton()
-  lyt[15,2,expand=TRUE]<-staprogress
+  progress_bar <- gtkProgressBar()
+  lyt[15,2,expand=TRUE]<-progress_bar
   
   
   addHandlerClicked(importdata,handler=function(h,...){
@@ -494,14 +569,15 @@ mrMLMSub<-function(){
             namePop<-as.matrix(psmatrixPre[,1])
             sameGenPop<-intersect(mrenv$sameName,namePop)
             locPop<-match(sameGenPop,namePop)
+            
             ##revised
             filtername<-as.vector(mrenv$psmatrixRaw[2,2:nnppcol])
-            selectpsmatrix<-matrix(as.numeric(psmatrixPre[locPop,-1]),nrow = nrow(psmatrixPre))
+            selectpsmatrix<-matrix(as.numeric(psmatrixPre[locPop,-1]),nrow = length(locPop))
             psum<-apply(selectpsmatrix,1,sum)
             psum<-round(psum)
             sumps<-sum(psum)
             m<-dim(selectpsmatrix)[1]
-            if(sumps==m){
+            if(sumps>=m){
               filterps<-gwindow("Filter",visible=FALSE,width=300,height=120)
               filergp<-ggroup(container=filterps,expand=FALSE)
               filterlyt<-glayout(container = filergp)
@@ -621,6 +697,9 @@ mrMLMSub<-function(){
     kk<-mrenv$kk
     flagps<-mrenv$flagps
     psmatrix<-mrenv$psmatrix
+    if(is.null(mrenv$svpal)==TRUE||is.null(mrenv$svrad)==TRUE||is.null(mrenv$svmlod)==TRUE){
+      gmessage("Please set parameter!","Warning",icon="warning")
+    }
     if(exists("gen")==FALSE)
     {
       gmessage("Please input correct genotype dataset !","Warning",icon="warning")
@@ -638,10 +717,9 @@ mrMLMSub<-function(){
       gmessage("Sample sizes between genotypic and phenotypic datasets do not equal !","Error",icon="error")
     }
     
-    if((exists("gen")==TRUE)&&(exists("phe")==TRUE)&&(exists("kk")==TRUE)&&((ncol(gen)==(nrow(phe)+2))))
+    if((exists("gen")==TRUE)&&(exists("phe")==TRUE)&&(exists("kk")==TRUE)&&((ncol(gen)==(nrow(phe)+2)))&&is.null(mrenv$svpal)==FALSE&&is.null(mrenv$svrad)==FALSE&&is.null(mrenv$svmlod)==FALSE)
     {
-      progress_bar <- gtkProgressBar ( )
-      staprogress$add(progress_bar)
+      
       progress_bar$setText ( "Please be patient ..." )
       progress_bar$setFraction(2/100)
       
@@ -980,8 +1058,6 @@ mrMLMSub<-function(){
       no_porder<-as.matrix(no_porder)
       no_porderrow<-nrow(no_porder)
       gg<-orderno
-      
-      
       for (ii in 1:(nrow(orderno)-1)){
         for (jj in (ii+1):(nrow(orderno))){
           ci<- chr_pos[orderno[ii],1]
@@ -1146,127 +1222,132 @@ mrMLMSub<-function(){
       xin<-as.matrix(xin)
       par<-ebayes_EM(xin,xx,phe)
       w2<-which(par[,1]<=0.01)
-      w2<-as.matrix(w2)
-      ww<- numeric()
-      if ((nrow(w2))>0){
-        orderno<-a2[w2,1]
-        orderno<-as.matrix(orderno)
-        x3<-cbind(xin,xx[,w2])
-        x3<-as.matrix(x3)
-        lodfix<-matrix(x3[,1],nrow(x3),)
-        lodrand<-matrix(x3[,2:(ncol(x3))],nrow(x3),)
-        if((flagps==1)||(exists("psmatrix")==FALSE))
-        {
-          lod<-likelihood(lodfix,lodrand,phe)
-        }else if(flagps==0)
-        {
-          temp<-cbind(psmatrix,lodfix)
-          lod<-likelihood(temp,lodrand,phe)
-        }
-        w3<-which(lod[,1]>=(mrenv$svmlod))
-        w3<-as.matrix(w3)
-        if ((kk[1])>0){
-          g0<-as.matrix(g0)
-          orderno<-rbind(g0,orderno)
+      if(length(w2)==0){
+        gmessage("No QTN were detected!",icon = "info",parent = window,title="Info")
+        progress_bar$setText ( "Stop Running!" )
+      }else{
+        w2<-as.matrix(w2)
+        ww<- numeric()
+        if ((nrow(w2))>0){
+          orderno<-a2[w2,1]
           orderno<-as.matrix(orderno)
-        }
-        if ((w3[1])>0){
+          x3<-cbind(xin,xx[,w2])
+          x3<-as.matrix(x3)
+          lodfix<-matrix(x3[,1],nrow(x3),)
+          lodrand<-matrix(x3[,2:(ncol(x3))],nrow(x3),)
           if((flagps==1)||(exists("psmatrix")==FALSE))
           {
-            lo<-lod[w3,1]
-            ww<-orderno[w3,]
+            lod<-likelihood(lodfix,lodrand,phe)
           }else if(flagps==0)
           {
-            lo<-lod[w3,1]
-            no_loc<-w3-ncol(psmatrix)
-            ww<-orderno[no_loc,]
+            temp<-cbind(psmatrix,lodfix)
+            lod<-likelihood(temp,lodrand,phe)
           }
+          w3<-which(lod[,1]>=(mrenv$svmlod))
+          w3<-as.matrix(w3)
+          if ((kk[1])>0){
+            g0<-as.matrix(g0)
+            orderno<-rbind(g0,orderno)
+            orderno<-as.matrix(orderno)
+          }
+          if ((w3[1])>0){
+            if((flagps==1)||(exists("psmatrix")==FALSE))
+            {
+              lo<-lod[w3,1]
+              ww<-orderno[w3,]
+            }else if(flagps==0)
+            {
+              lo<-lod[w3,1]
+              no_loc<-w3-ncol(psmatrix)
+              ww<-orderno[no_loc,]
+            }
+          }
+          if ((nrow(w3))==0){ww<-0}
+          #if (length(kk)==1){ww<-0}
         }
-        if ((nrow(w3))==0){ww<-0}
-        #if (length(kk)==1){ww<-0}
-      }
-      if ((nrow(w2))==0){
-        g0<-as.matrix(g0)
-        lo<-as.matrix(lo)
-        yang<-which(lo>=(mrenv$svmlod))
-        yang<-as.matrix(yang)
-        if ((nrow(yang))>0){
-          ww<-g0[yang,1]
-          lo<-lo[yang,1]
+        if ((nrow(w2))==0){
+          g0<-as.matrix(g0)
+          lo<-as.matrix(lo)
+          yang<-which(lo>=(mrenv$svmlod))
+          yang<-as.matrix(yang)
+          if ((nrow(yang))>0){
+            ww<-g0[yang,1]
+            lo<-lo[yang,1]
+          }
+          if ((nrow(yang))==0){ww<-0}
         }
-        if ((nrow(yang))==0){ww<-0}
-      }
-      ww<-as.matrix(ww)
-      mrenv$needww<-ww
-      if (length(ww)>1){
-        if((flagps==1)||(exists("psmatrix")==FALSE))
-        {
-          ex<-cbind(matrix(1,(nrow(xx)),1),t(gen[ww,]))
-        }else if(flagps==0)
-        {
-          ex<-cbind(cbind(matrix(1,(nrow(xx)),1),psmatrix),t(gen[ww,]))
-        }
-        ex<-as.matrix(ex)
-        cui<-det(t(ex)%*%ex)
-        p1<-rep(1,ncol(ex))
-        p2<-diag(p1)
-        if (cui<1e-6){bbbb<-solve(t(ex)%*%ex+p2*0.01)%*%t(ex)%*%phe}
-        if (cui>=1e-6){ bbbb<-solve(t(ex)%*%ex)%*%t(ex)%*%phe }
-        if((flagps==1)||(exists("psmatrix")==FALSE))
-        {
-          eeff<-bbbb[2:(nrow(bbbb)),1]
-        }else if(flagps==0)
-        {
-          eeff<-bbbb[(2+ncol(psmatrix)):(nrow(bbbb)),1]
-        }
-        
-        eeff<-as.matrix(eeff)
-        er<-as.numeric()
-        her<-as.numeric()
-        if((flagps==1)||(exists("psmatrix")==FALSE))
-        {
-          excol<-ncol(ex)
-          for(i in 1:(excol-1))
+        ww<-as.matrix(ww)
+        mrenv$needww<-ww
+        if (length(ww)>1){
+          if((flagps==1)||(exists("psmatrix")==FALSE))
           {
-            em<-ex[,(1+i)]
-            as1<-length(which(em==1))/nrow(ex)
-            as2<-1-as1
-            er<-rbind(er,(1-(as1-as2)*(as1-as2))*eeff[i]*eeff[i])
-          }
-          v0<-(1/(nrow(ex)-1))*(t(phe-ex%*%bbbb)%*%(phe-ex%*%bbbb))
-          her<-(er/as.numeric(sum(er)+v0))*100
-        }else if(flagps==0)
-        {
-          excol<-ncol(ex)
-          for(i in 1:(excol-1-ncol(psmatrix)))
+            ex<-cbind(matrix(1,(nrow(xx)),1),t(gen[ww,]))
+          }else if(flagps==0)
           {
-            em<-ex[,(1+ncol(psmatrix)+i)]
-            as1<-length(which(em==1))/nrow(ex)
-            as2<-1-as1
-            er<-rbind(er,(1-(as1-as2)*(as1-as2))*eeff[i]*eeff[i])
+            ex<-cbind(cbind(matrix(1,(nrow(xx)),1),psmatrix),t(gen[ww,]))
           }
-          v0<-(1/(nrow(ex)-1))*(t(phe-ex%*%bbbb)%*%(phe-ex%*%bbbb))
-          her<-(er/as.numeric(sum(er)+v0))*100
+          ex<-as.matrix(ex)
+          cui<-det(t(ex)%*%ex)
+          p1<-rep(1,ncol(ex))
+          p2<-diag(p1)
+          if (cui<1e-6){bbbb<-solve(t(ex)%*%ex+p2*0.01)%*%t(ex)%*%phe}
+          if (cui>=1e-6){ bbbb<-solve(t(ex)%*%ex)%*%t(ex)%*%phe }
+          if((flagps==1)||(exists("psmatrix")==FALSE))
+          {
+            eeff<-bbbb[2:(nrow(bbbb)),1]
+          }else if(flagps==0)
+          {
+            eeff<-bbbb[(2+ncol(psmatrix)):(nrow(bbbb)),1]
+          }
+          
+          eeff<-as.matrix(eeff)
+          er<-as.numeric()
+          her<-as.numeric()
+          if((flagps==1)||(exists("psmatrix")==FALSE))
+          {
+            excol<-ncol(ex)
+            for(i in 1:(excol-1))
+            {
+              em<-ex[,(1+i)]
+              as1<-length(which(em==1))/nrow(ex)
+              as2<-1-as1
+              er<-rbind(er,(1-(as1-as2)*(as1-as2))*eeff[i]*eeff[i])
+            }
+            v0<-(1/(nrow(ex)-1))*(t(phe-ex%*%bbbb)%*%(phe-ex%*%bbbb))
+            her<-(er/as.numeric(sum(er)+v0))*100
+          }else if(flagps==0)
+          {
+            excol<-ncol(ex)
+            for(i in 1:(excol-1-ncol(psmatrix)))
+            {
+              em<-ex[,(1+ncol(psmatrix)+i)]
+              as1<-length(which(em==1))/nrow(ex)
+              as2<-1-as1
+              er<-rbind(er,(1-(as1-as2)*(as1-as2))*eeff[i]*eeff[i])
+            }
+            v0<-(1/(nrow(ex)-1))*(t(phe-ex%*%bbbb)%*%(phe-ex%*%bbbb))
+            her<-(er/as.numeric(sum(er)+v0))*100
+          }
+          eeff[which(abs(eeff)>=1e-4)] <- round(eeff[which(abs(eeff)>=1e-4)],4)
+          eeff[which(abs(eeff)<1e-4)] <- as.numeric(sprintf("%.4e",eeff[which(abs(eeff)<1e-4)]))
+          lo[which(abs(lo)>=1e-4)] <- round(lo[which(abs(lo)>=1e-4)],4)
+          lo[which(abs(lo)<1e-4)] <- as.numeric(sprintf("%.4e",lo[which(abs(lo)<1e-4)]))
+          her[which(abs(her)>=1e-4)] <- round(her[which(abs(her)>=1e-4)],4)
+          her[which(abs(her)<1e-4)] <- as.numeric(sprintf("%.4e",her[which(abs(her)<1e-4)]))
+          mrenv$wan<-data.frame(mrenv$parmsShow[mrenv$needww,1],chr_pos[ww,],eeff,lo,her,mrenv$parmsShow[mrenv$needww,11])
+          colnames(mrenv$wan)<-c("RS#","Chromosome","Marker Position (bp)","QTN effect","LOD score","r2 (%)","Genotype  for code 1")
+          
         }
-        eeff[which(abs(eeff)>=1e-4)] <- round(eeff[which(abs(eeff)>=1e-4)],4)
-        eeff[which(abs(eeff)<1e-4)] <- as.numeric(sprintf("%.4e",eeff[which(abs(eeff)<1e-4)]))
-        lo[which(abs(lo)>=1e-4)] <- round(lo[which(abs(lo)>=1e-4)],4)
-        lo[which(abs(lo)<1e-4)] <- as.numeric(sprintf("%.4e",lo[which(abs(lo)<1e-4)]))
-        her[which(abs(her)>=1e-4)] <- round(her[which(abs(her)>=1e-4)],4)
-        her[which(abs(her)<1e-4)] <- as.numeric(sprintf("%.4e",her[which(abs(her)<1e-4)]))
-        mrenv$wan<-data.frame(mrenv$parmsShow[mrenv$needww,1],chr_pos[ww,],eeff,lo,her,mrenv$parmsShow[mrenv$needww,11])
-        colnames(mrenv$wan)<-c("RS#","Chromosome","Marker Position (bp)","QTN effect","LOD score","r2 (%)","Genotype  for code 1")
-        
+        wan<-mrenv$wan
+        if(exists("wan")==FALSE||is.null(wan)==TRUE)
+        {
+          gmessage("No result meets the requirements in the second step!","Info",icon="info")
+        }else{
+          tbdfe8<-gdfedit(wan,container=nb1,expand=TRUE,label="Result2")
+        }
+        progress_bar$setFraction(100/100)
+        progress_bar$setText("All done.")
       }
-      wan<-mrenv$wan
-      if(exists("wan")==FALSE||is.null(wan)==TRUE)
-      {
-        gmessage("No result meets the requirements in the second step!","Info",icon="info")
-      }else{
-        tbdfe8<-gdfedit(wan,container=nb1,expand=TRUE,label="Result2")
-      }
-      progress_bar$setFraction(100/100)
-      progress_bar$setText("All done.")
     }
   })
   
@@ -1557,8 +1638,6 @@ GCIMSub<-function(){
   
   window<-gwindow("Genome-wide Composite Interval Mapping (GCIM)",visible=TRUE,width=1240,height=650,expand=TRUE)
   wgroup<-ggroup(container = window)
-  
-  
   icimw<-gwindow("QTLIciMaping Format",visible = FALSE,width =80,height = 140,expand=FALSE)
   icimg<-ggroup(container = icimw,expand=FALSE)
   cartw<-gwindow("WinQTLCart Format",visible = FALSE,width = 80,height = 120,expand=FALSE)
@@ -1601,18 +1680,10 @@ GCIMSub<-function(){
   framlyt[2,3:4]<-framedit_trait
   framlyt[2,5]<-covbt
   framlyt[2,6:7]<-runbt
-  
   framlyt[1, 20:28] <-clearbt 
   framlyt[2, 20:28] <-exitbt
-  
-  
-  
-  
   nb1<-gnotebook(tab.pos=3,closebuttons=TRUE,dontCloseThese=TRUE,container=lyt,expand=TRUE)
-  
-  
-  size(nb1)<-c(1200,600)
-  
+  size(nb1)<-c(1200,550)
   progress_bar <- gtkProgressBar()
   lyt[1:2,1:20,expand=TRUE]<-frame
   
@@ -1628,10 +1699,10 @@ GCIMSub<-function(){
                 
                    a multi-locus GWAS methodology. Scientific Reports 2016, 6: 29951.
                 
-                3. The software package is developed by Yuan-Li Ni,Wen-Long Ren, Shi-Bo Wang & Yuan-Ming Zhang.
+                3. The software package is developed by Yuan-Li Ni, Wen-Long Ren, Shi-Bo Wang & Yuan-Ming Zhang.
                 
                 
-                   Version 2.0, Realeased Dec 2016",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
+                ",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
   
   
   font(tb)<-c(size="x-large")
@@ -5950,27 +6021,27 @@ GCIMSub<-function(){
     yygg<-envim$yygg
     if(is.null(genRaw)==TRUE){
       gmessage("Please input correct genotype dataset!","Warning",icon="warning")
-      return
+      
     }
     if(is.null(pheRaw)==TRUE){
       gmessage("Please input correct phenotype dataset!","Warning",icon="warning")
-      return
+      
     }
     if(is.null(mapRaw1)==TRUE){
       gmessage("Please input correct linkage map dataset!","Warning",icon="warning")
-      return
+      
     }
     if((is.null(genRaw)==FALSE)&&(is.null(pheRaw)==FALSE)&&(is.null(mapRaw1)==FALSE)&&(envim$ii>(ncol(pheRaw)-1))){
       gmessage("It is larger than the number of Traits","Warning",icon="warning")
-      return
+      
     }
     if((is.null(genRaw)==FALSE)&&(is.null(pheRaw)==FALSE)&&(is.null(mapRaw1)==FALSE)&&(envim$ii<=(ncol(pheRaw)-1))&&(cl<0)){
       gmessage("Please input Walk Speed: >0!","Warning",icon="warning")
-      return
+      
     }
     if((is.null(genRaw)==FALSE)&&(is.null(pheRaw)==FALSE)&&(is.null(mapRaw1)==FALSE)&&(envim$ii<=(ncol(pheRaw)-1))&&(cl>0)&&(sLOD<0)){
       gmessage("Please input critical LOD score: >0!","Warning",icon="warning")
-      return
+      
     }
     if((is.null(genRaw)==FALSE)&&(is.null(pheRaw)==FALSE)&&(is.null(mapRaw1)==FALSE)&&(envim$ii<=(ncol(pheRaw)-1))&&(cl>0)&&(sLOD>0)){
       
@@ -6921,243 +6992,255 @@ GCIMSub<-function(){
           if (bb[mc[nrow(mc)],10]<bb[mc[nrow(mc)-1],10]){aa<-rbind(aa,mc[nrow(mc)])}
         }
         
-        
         xx<-x0[,aa]
         par<-ebayes_EM(fx,xx,y)
-        cc<-which(par[,1]<=0.01)
-        name<-as.matrix(aa[cc,1])
-        xxx<-as.matrix(x0[,name])
-        y<-as.matrix(y)
-        lod<-likelihood(fx,xxx,y)
-        dd<-as.matrix(which(lod[,1]>=sLOD))
-        
-        if(length(dd)==1){
-          na<-matrix(name[dd],1,)
-          xxxm<-matrix(xxx[,dd],,1)
-          wow<-cbind(fx,xxxm)
-          bbbb<-solve(t(wow)%*%wow)%*%t(wow)%*%y
-          ef<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
-          genna1<-matrix(gen[na,1],,1)
-          genna2<-matrix(gen[na,2],,1)
-          genna3<-as.matrix(ef)
-          genna4<-as.matrix(lod[dd,])
-          galaxy<-cbind(genna1,genna2,genna3,genna4)
+        selectpos<-which(par[,1]<=0.01)
+        if(length( selectpos)==0){
+          gmessage("No QTL were detected!",icon = "info",parent = window,title="Info")
+          progress_bar$setText ( "Stop Running!" )
         }else{
-          na<-as.matrix(name[dd])
-          wow<-cbind(fx,xxx[,dd])
-          bbbb<-solve(t(wow)%*%wow)%*%t(wow)%*%y
-          ef<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
-          galaxy<-cbind(gen[na,1],gen[na,2],ef,lod[dd,])
-        }
-        
-        c1<-as.matrix(galaxy)
-        
-        xx1<-numeric()
-        for (i in 1:nrow(c1)){
-          ng1<-as.matrix(which(gen[,1]==c1[i,1]))
-          ng2<-gen[ng1,]
-          ng3<-as.matrix(which(ng2[,2]==c1[i,2]))
-          xx1<-rbind(xx1,ng2[ng3,])
-        }
-        
-        xx1<-as.matrix(xx1)
-        x1<-xx1[,3:(ncol(xx1))]
-        x1<-t(x1)
-        
-        wow<-cbind(fx,x1)
-        bbbb<-solve(t(wow)%*%wow)%*%t(wow)%*%y
-        ef<-as.matrix(bbbb[(ncol(fx)+1):nrow(bbbb),1])
-        y<-y-x1%*%ef
-        
-        
-        if (envim$flag==1)
-        {code<-random(fx=fx,gen=gen,phe=y,kk=kk)
-        }
-        if (envim$flag==0)
-        {code<-fix(x=fx,gen=gen,y=y,kk=kk)
-        }
-        
-        x0<-t(gen[,3:(ncol(gen))])
-        bb<-code
-        bb<-as.matrix(bb)
-        aa<-numeric()
-        for (i in 1:nrow(as.matrix(unique(gen[,1])))){
-          progress_bar$setFraction((82+(8/nrow(as.matrix(unique(gen[,1]))))*i)/100)
-          mc<-which(gen[,1]==i)
-          mc<-as.matrix(mc)
-          for (j in 1:(nrow(mc)-2))
-          {if (bb[mc[j+1],10]<bb[mc[j],10] & bb[mc[j+1],10]<bb[mc[j+2],10]){aa<-rbind(aa,mc[j+1])}
-          }
-          if (bb[mc[1],10]<bb[mc[2],10]){aa<-rbind(aa,mc[1])}
-          if (bb[mc[nrow(mc)],10]<bb[mc[nrow(mc)-1],10]){aa<-rbind(aa,mc[nrow(mc)])}
-        }
-        
-        mi<-code[aa,2:3]
-        
-        style<-numeric()
-        for (i in 1:nrow(mi))
-        {
-          progress_bar$setFraction((90+(3/nrow(mi))*i)/100)
-          for (j in 1:nrow(xx1))
-          {if (mi[i,1]==xx1[j,1] & mi[i,2]==xx1[j,2])
-          {style<-rbind(style,aa[i])
-          }
-          }
-        }
-        aa<-as.matrix(setdiff(aa,style))
-        xx<-x0[,aa]
-        par<-ebayes_EM(fx,xx,y)
-        cc<-as.matrix(which(par[,1]<=0.01))
-        if (nrow(cc)>0)
-        {
+          cc<-which(par[,1]<=0.01)
           name<-as.matrix(aa[cc,1])
           xxx<-as.matrix(x0[,name])
           y<-as.matrix(y)
           lod<-likelihood(fx,xxx,y)
           dd<-as.matrix(which(lod[,1]>=sLOD))
-          if (nrow(dd)>0)
-          {na<-as.matrix(name[dd])
-          wow<-cbind(fx,xxx[,dd])
+          
+          if(length(dd)==1){
+            na<-matrix(name[dd],1,)
+            xxxm<-matrix(xxx[,dd],,1)
+            wow<-cbind(fx,xxxm)
+            bbbb<-solve(t(wow)%*%wow)%*%t(wow)%*%y
+            ef<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
+            genna1<-matrix(gen[na,1],,1)
+            genna2<-matrix(gen[na,2],,1)
+            genna3<-as.matrix(ef)
+            genna4<-as.matrix(lod[dd,])
+            galaxy<-cbind(genna1,genna2,genna3,genna4)
+          }else{
+            na<-as.matrix(name[dd])
+            wow<-cbind(fx,xxx[,dd])
+            bbbb<-solve(t(wow)%*%wow)%*%t(wow)%*%y
+            ef<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
+            galaxy<-cbind(gen[na,1],gen[na,2],ef,lod[dd,])
+          }
+          envim$galaxy<-galaxy
+          
+          c1<-as.matrix(galaxy)
+          
+          xx1<-numeric()
+          for (i in 1:nrow(c1)){
+            ng1<-as.matrix(which(gen[,1]==c1[i,1]))
+            ng2<-gen[ng1,]
+            ng3<-as.matrix(which(ng2[,2]==c1[i,2]))
+            xx1<-rbind(xx1,ng2[ng3,])
+          }
+          
+          
+          xx1<-as.matrix(xx1)
+          x1<-matrix(xx1[,3:(ncol(xx1))],,(ncol(xx1)-2))
+          x1<-t(x1)
+          x1<-as.matrix(x1)
+          wow<-cbind(fx,x1)
           bbbb<-solve(t(wow)%*%wow)%*%t(wow)%*%y
-          ef<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
-          galaxy<-cbind(gen[na,1],gen[na,2],ef,lod[dd,])
+          ef<-as.matrix(bbbb[(ncol(fx)+1):nrow(bbbb),1])
+          y<-y-x1%*%ef
           
-          pp<-as.matrix(phe[,1])
-          x2<-as.matrix(cbind(x1,xxx[,dd]))
-          na2<-rbind(xx1[,1:2],galaxy[,1:2])
-          lod1<-likelihood(fx,x2,pp)
-          dd1<-which(lod1[,1]>=sLOD)
           
-          woww<-cbind(fx,x2[,dd1])
-          bbbb<-solve(t(woww)%*%woww)%*%t(woww)%*%pp
-          eff<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
-          galaxyy<-cbind(na2[dd1,],eff,lod1[dd1,])
+          if (envim$flag==1)
+          {code<-random(fx=fx,gen=gen,phe=y,kk=kk)
           }
-          if (nrow(dd)==0)
-          {galaxyy<-galaxy
-          woww<-wow
+          if (envim$flag==0)
+          {code<-fix(x=fx,gen=gen,y=y,kk=kk)
           }
-        }
-        
-        if (nrow(cc)==0)
-        {galaxyy<-galaxy
-        woww<-wow
-        }
-        progress_bar$setFraction(95/100)
-        pp<-as.matrix(phe[,1])
-        
-        va<-galaxyy[,3]*galaxyy[,3]
-        ve<-(1/(n_sam-1))*t(pp-woww%*%bbbb)%*%(pp-woww%*%bbbb)
-        vp<-(1/(n_sam-1))*t(pp-mean(pp))%*%(pp-mean(pp))
-        vy<-(sum(va)+ve)
-        
-        if (vy>=vp){
-          heredity<-va/vy
-          pv<-vy}
-        if (vy<vp){
-          heredity<-va/vp
-          pv<-vp}
-        
-        va<-matrix(va,,1)
-        va<-round(va,4)
-        heredity<-100*heredity
-        heredity<-matrix(heredity,,1)
-        heredity<-round(heredity,4)
-        galaxyy[which(abs(galaxyy)>1e-4)]<-round(galaxyy[which(abs(galaxyy)>1e-4)],4)
-        galaxyy[which(abs(galaxyy)<1e-4)]<-as.numeric(sprintf("%.4e",galaxyy[which(abs(galaxyy)<1e-4)]))
-        
-        
-        if(is.null(mapname)==FALSE){
-          map<-as.numeric(mapname[,2:3])
-          map<-matrix(map,nrow(mapname),2)
-          galaxytwo<-galaxyy[,1:2]
-          left_marker<-numeric()
-          right_marker<-numeric()
           
+          x0<-t(gen[,3:(ncol(gen))])
+          bb<-code
+          bb<-as.matrix(bb)
+          aa<-numeric()
+          for (i in 1:nrow(as.matrix(unique(gen[,1])))){
+            progress_bar$setFraction((82+(8/nrow(as.matrix(unique(gen[,1]))))*i)/100)
+            mc<-which(gen[,1]==i)
+            mc<-as.matrix(mc)
+            for (j in 1:(nrow(mc)-2))
+            {if (bb[mc[j+1],10]<bb[mc[j],10] & bb[mc[j+1],10]<bb[mc[j+2],10]){aa<-rbind(aa,mc[j+1])}
+            }
+            if (bb[mc[1],10]<bb[mc[2],10]){aa<-rbind(aa,mc[1])}
+            if (bb[mc[nrow(mc)],10]<bb[mc[nrow(mc)-1],10]){aa<-rbind(aa,mc[nrow(mc)])}
+          }
           
-          for( i in 1:nrow(galaxyy)){
-            
-            allchr<-as.vector(map[which(map[,1]==galaxytwo[i,1]),2])
-            chr_loc<-which(map[,1]==galaxytwo[i,1])
-            allmarker<-mapname[chr_loc,1]
-            chose_left<-(map[which(map[,1]==galaxytwo[i,1]),2]<galaxytwo[i,2])
-            max_left<-max(allchr[chose_left[]==TRUE])
-            chr_loclen<-length(chr_loc)
-            if(max_left==-Inf){
+          mi<-code[aa,2:3]
+          
+          style<-numeric()
+          for (i in 1:nrow(mi))
+          {
+            progress_bar$setFraction((90+(3/nrow(mi))*i)/100)
+            for (j in 1:nrow(xx1))
+            {if (mi[i,1]==xx1[j,1] & mi[i,2]==xx1[j,2])
+            {style<-rbind(style,aa[i])
+            }
+            }
+          }
+          aa<-as.matrix(setdiff(aa,style))
+          xx<-x0[,aa]
+          par<-ebayes_EM(fx,xx,y)
+          cc<-as.matrix(which(par[,1]<=0.01))
+          selectpos1<-which(par[,1]<=0.01)
+          if(length( selectpos1)==0){
+            gmessage("No QTL were detected!",icon = "info",parent = window,title="Info")
+            progress_bar$setText ( "Stop Running!" )
+          }else{
+            if (nrow(cc)>0)
+            {
+              name<-as.matrix(aa[cc,1])
+              xxx<-as.matrix(x0[,name])
+              y<-as.matrix(y)
+              lod<-likelihood(fx,xxx,y)
+              dd<-as.matrix(which(lod[,1]>=sLOD))
+              if (nrow(dd)>0)
+              {na<-as.matrix(name[dd])
+              wow<-cbind(fx,xxx[,dd])
+              bbbb<-solve(t(wow)%*%wow)%*%t(wow)%*%y
+              ef<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
+              galaxy<-cbind(gen[na,1],gen[na,2],ef,lod[dd,])
               
-              leftmarker<-matrix(mapname[chr_loc[1],1],,1)
-            }else{
-              leftloc<-which(allchr[]==max_left)
+              pp<-as.matrix(phe[,1])
+              x2<-as.matrix(cbind(x1,xxx[,dd]))
+              na2<-rbind(xx1[,1:2],galaxy[,1:2])
+              lod1<-likelihood(fx,x2,pp)
+              dd1<-which(lod1[,1]>=sLOD)
               
-              leftmarker<-matrix(allmarker[leftloc],,1)
+              woww<-cbind(fx,x2[,dd1])
+              bbbb<-solve(t(woww)%*%woww)%*%t(woww)%*%pp
+              eff<-bbbb[(ncol(fx)+1):nrow(bbbb),1]
+              galaxyy<-cbind(na2[dd1,],eff,lod1[dd1,])
+              }
+              if (nrow(dd)==0)
+              {galaxyy<-galaxy
+              woww<-wow
+              }
             }
             
-            chose_right<-(map[which(map[,1]==galaxytwo[i,1]),2]>galaxytwo[i,2])
-            min_right<-min(allchr[chose_right[]==TRUE])
-            if(min_right==Inf){
-              rightmarker<-matrix(mapname[chr_loc[chr_loclen],1],,1)
-            }else{
-              rightloc<-which(allchr[]==min_right)
+            if (nrow(cc)==0)
+            {galaxyy<-galaxy
+            woww<-wow
+            }
+            progress_bar$setFraction(95/100)
+            pp<-as.matrix(phe[,1])
+            
+            va<-galaxyy[,3]*galaxyy[,3]
+            ve<-(1/(n_sam-1))*t(pp-woww%*%bbbb)%*%(pp-woww%*%bbbb)
+            vp<-(1/(n_sam-1))*t(pp-mean(pp))%*%(pp-mean(pp))
+            vy<-(sum(va)+ve)
+            
+            if (vy>=vp){
+              heredity<-va/vy
+              pv<-vy}
+            if (vy<vp){
+              heredity<-va/vp
+              pv<-vp}
+            
+            va<-matrix(va,,1)
+            va<-round(va,4)
+            heredity<-100*heredity
+            heredity<-matrix(heredity,,1)
+            heredity<-round(heredity,4)
+            galaxyy[which(abs(galaxyy)>1e-4)]<-round(galaxyy[which(abs(galaxyy)>1e-4)],4)
+            galaxyy[which(abs(galaxyy)<1e-4)]<-as.numeric(sprintf("%.4e",galaxyy[which(abs(galaxyy)<1e-4)]))
+            
+            
+            if(is.null(mapname)==FALSE){
+              map<-as.numeric(mapname[,2:3])
+              map<-matrix(map,nrow(mapname),2)
+              ###
+              galaxytwo<-matrix(galaxyy[,1:2],,2)
+              left_marker<-numeric()
+              right_marker<-numeric()
               
-              rightmarker<-matrix(allmarker[rightloc],,1)
+              
+              for( i in 1:nrow(galaxyy)){
+                
+                allchr<-as.vector(map[which(map[,1]==galaxytwo[i,1]),2])
+                chr_loc<-which(map[,1]==galaxytwo[i,1])
+                ###
+                allmarker<-as.matrix(mapname[chr_loc,1])
+                chose_left<-(map[which(map[,1]==galaxytwo[i,1]),2]<galaxytwo[i,2])
+                max_left<-max(allchr[chose_left[]==TRUE])
+                chr_loclen<-length(chr_loc)
+                if(max_left==-Inf){
+                  
+                  leftmarker<-matrix(mapname[chr_loc[1],1],,1)
+                }else{
+                  leftloc<-which(allchr[]==max_left)
+                  
+                  leftmarker<-matrix(allmarker[leftloc],,1)
+                }
+                
+                chose_right<-(map[which(map[,1]==galaxytwo[i,1]),2]>galaxytwo[i,2])
+                min_right<-min(allchr[chose_right[]==TRUE])
+                if(min_right==Inf){
+                  rightmarker<-matrix(mapname[chr_loc[chr_loclen],1],,1)
+                }else{
+                  rightloc<-which(allchr[]==min_right)
+                  
+                  rightmarker<-matrix(allmarker[rightloc],,1)
+                }
+                
+                
+                left_marker<-rbind(left_marker,leftmarker)
+                right_marker<-rbind(right_marker,rightmarker)
+              }
+              
+            }else{
+              left_marker<-matrix("------",nrow(galaxyy),1)
+              right_marker<-matrix("------",nrow(galaxyy),1) 
             }
             
+            if((is.null(chrRaw_name)==FALSE)&&(is.null(chr_name)==FALSE)){
+              
+              chr_name<-chr_name
+              chrRaw_name<-chrRaw_name
+              galaxyysec<-galaxyy[,1]
+              galaxyylast<-matrix(galaxyy[,2:ncol(galaxyy)],,(ncol(galaxyy)-1))
+              
+              
+              chrName<-numeric()
+              for( i in 1:length(galaxyysec)){
+                chrLoc<-which(chr_name[]==galaxyysec[i])
+                chrName0<-matrix(chrRaw_name[chrLoc],,1)
+                chrName<-rbind(chrName,chrName0)
+              }
+              
+              galaxyy_A<-cbind(chrName,galaxyylast)
+            }else{
+              galaxyy_A<-galaxyy
+            }
             
-            left_marker<-rbind(left_marker,leftmarker)
-            right_marker<-rbind(right_marker,rightmarker)
+            galaxyy_A<-as.matrix(galaxyy_A)
+            vee<-matrix("",nrow(galaxyy_A),1)
+            vee[1,1]<-round(ve,4)
+            vee<-matrix(vee,,1)
+            vpp<-matrix("",nrow(galaxyy_A),1)
+            vpp[1,1]<-round(pv,4)
+            vpp<-matrix(vpp,,1)
+            traitid<-matrix(envim$ii,nrow(galaxyy_A),1)
+            
+            envim$galaxyy<-galaxyy
+            envim$result<-cbind(traitid,galaxyy_A,left_marker,right_marker,va,heredity,vee,vpp)
+            colnames(envim$result)<-c("TraitID","Chr","Position (cM)","Additive Effect","LOD","Left_Marker","Right_Marker","Var_Genet_(i)","r2 (%)","Var_Error",
+                                      "Var_Phen (total)")
+            
+            
+            if(is.null(envim$result)==TRUE){
+              gmessage("No result meets the requirements in the last step!","Info",icon="info")
+              
+            }else{
+              tbdfe8<-gdfedit(envim$result,container=nb1,expand=TRUE,label="Result")
+            }
+            progress_bar$setFraction(100/100)
+            progress_bar$setText("All done.")
           }
-          
-        }else{
-          left_marker<-matrix("------",nrow(galaxyy),1)
-          right_marker<-matrix("------",nrow(galaxyy),1) 
         }
-        
-        
-        
-        
-        if((is.null(chrRaw_name)==FALSE)&&(is.null(chr_name)==FALSE)){
-          
-          chr_name<-chr_name
-          chrRaw_name<-chrRaw_name
-          galaxyysec<-galaxyy[,1]
-          galaxyylast<-galaxyy[,2:ncol(galaxyy)]
-          
-          
-          chrName<-numeric()
-          for( i in 1:length(galaxyysec)){
-            chrLoc<-which(chr_name[]==galaxyysec[i])
-            chrName0<-matrix(chrRaw_name[chrLoc],,1)
-            chrName<-rbind(chrName,chrName0)
-          }
-          
-          galaxyy_A<-cbind(chrName,galaxyylast)
-        }else{
-          galaxyy_A<-galaxyy
-        }
-        
-        galaxyy_A<-as.matrix(galaxyy_A)
-        vee<-matrix("",nrow(galaxyy_A),1)
-        vee[1,1]<-round(ve,4)
-        vee<-matrix(vee,,1)
-        vpp<-matrix("",nrow(galaxyy_A),1)
-        vpp[1,1]<-round(pv,4)
-        vpp<-matrix(vpp,,1)
-        traitid<-matrix(envim$ii,nrow(galaxyy_A),1)
-        
-        envim$galaxyy<-galaxyy
-        envim$result<-cbind(traitid,galaxyy_A,left_marker,right_marker,va,heredity,vee,vpp)
-        colnames(envim$result)<-c("TraitID","Chr","Position (cM)","Additive Effect","LOD","Left_Marker","Right_Marker","Var_Genet_(i)","r2 (%)","Var_Error",
-                                  "Var_Phen (total)")
-        
-        
-        if(is.null(envim$result)==TRUE){
-          gmessage("No result meets the requirements in the last step!","Info",icon="info")
-          return
-        }else{
-          tbdfe8<-gdfedit(envim$result,container=nb1,expand=TRUE,label="Result")
-        }
-        progress_bar$setFraction(100/100)
-        progress_bar$setText("All done.")
       }
     }
     
@@ -7262,15 +7345,13 @@ GCIMSub<-function(){
     
   })
   
-  
-  
   fusave<-function(h,...){
     
     result<-envim$result
     if(is.null(result)==TRUE)
     {
       gmessage("No result meets the requirements!","Info",icon="info")
-      return
+      
     }else{
       output<-gfile(text="Save a file...",type="save",
                     filter=list("All files"=list(patterns=c("*")),
@@ -7284,11 +7365,7 @@ GCIMSub<-function(){
     if(is.null(envim$mx)==TRUE){
       gmessage("Please input correct genotype dataset!","Warning",icon="warning")
     }
-    if(is.null(envim$galaxyy)==TRUE){
-      gmessage("No result meets the requirements!","Info",icon="info")
-    }
-    
-    if((is.null(envim$mx)==FALSE)&&(is.null(envim$galaxyy)==FALSE)&&(is.null(envim$chr_name)==FALSE)){
+    if((is.null(envim$mx)==FALSE)&&(is.null(envim$chr_name)==FALSE)){
       plotwin<-gwindow("Genome-wide composite interval mapping (GCIM) figure",visible=FALSE,width=960,height=500)
       gpw<-ggroup(container=plotwin,horizontal = FALSE,spacing = 10)
       ggpw<-ggraphics(container=gpw)
@@ -7396,13 +7473,14 @@ GCIMSub<-function(){
             newposadd[temp1] <- newposadd[temp1]+pos_acc[i-1]
           }
         }
-        
-        newres_pos <- envim$galaxyy[,2]
-        res_sumpos <- pos_acc[envim$galaxyy[which(envim$galaxyy[,1]>1),1]-1] + envim$galaxyy[which(envim$galaxyy[,1]>1),2] 
-        newres_pos[which(envim$galaxyy[,1]>1)] <- res_sumpos 
-        pospic<-c(newres_pos)
-        lodpic<-c(envim$galaxyy[,4])
-        resdf <- data.frame(pospic,lodpic)
+        if(is.null(envim$galaxyy)==FALSE){
+          newres_pos <- envim$galaxyy[,2]
+          res_sumpos <- pos_acc[envim$galaxyy[which(envim$galaxyy[,1]>1),1]-1] + envim$galaxyy[which(envim$galaxyy[,1]>1),2] 
+          newres_pos[which(envim$galaxyy[,1]>1)] <- res_sumpos 
+          pospic<-c(newres_pos)
+          lodpic<-c(envim$galaxyy[,4])
+          resdf <- data.frame(pospic,lodpic)
+        }
         
         resp<-as.matrix(envim$res1[,10])
         pmin<-min(resp[resp!=0])
@@ -7414,17 +7492,19 @@ GCIMSub<-function(){
           envim$res1<-envim$res1
         }
         
-        
         negloP <- -log10(as.matrix(envim$res1[,10]))
-        
-        par(mar=c(2*margin_space,2*margin_space,2*margin_space,2*margin_space)+margin_space,mgp=c(3*axis_space,axis_space,0))  
-        plot(pospic,lodpic,type="h",col=color1,xlab="",ylab="Logarithm of odds (LOD)",cex.axis=legend_size,cex.lab=legend_size,lwd=mainline_size,xlim=c(0,max(newposadd)),ylim=c(0,max(lodpic)))
-        abline(h=lodthred)
-        par(new=TRUE)
-        plot(newposadd,negloP,type="l",col=color2,xaxt="n",yaxt="n",xlab="",ylab="",lwd=backline_size,xlim=c(0,max(newposadd)),ylim=c(0,logPCoff*max(negloP)))
-        axis(side=4,cex.axis=legend_size)
-        mtext(expression('-log'[10]*'(P)'),side=4,line=3*axis_space,cex=legend_size)
-        abline(v=pos_acc,lty=2,col="gray")
+        if(is.null(envim$galaxyy)==FALSE){
+          par(mar=c(2*margin_space,2*margin_space,2*margin_space,2*margin_space)+margin_space,mgp=c(3*axis_space,axis_space,0))  
+          plot(pospic,lodpic,type="h",col=color1,xlab="",ylab="Logarithm of odds (LOD)",cex.axis=legend_size,cex.lab=legend_size,lwd=mainline_size,xlim=c(0,max(newposadd)),ylim=c(0,max(lodpic)))
+          abline(h=lodthred)
+          par(new=TRUE)
+          plot(newposadd,negloP,type="l",col=color2,xaxt="n",yaxt="n",xlab="",ylab="",lwd=backline_size,xlim=c(0,max(newposadd)),ylim=c(0,logPCoff*max(negloP)))
+          axis(side=4,cex.axis=legend_size)
+          mtext(expression('-log'[10]*'(P)'),side=4,line=3*axis_space,cex=legend_size)
+          abline(v=pos_acc,lty=2,col="gray")
+        }else{
+          plot(newposadd,negloP,type="l",col=color1,xlab="Genome position (cM)",ylab=expression('Expected -log'[10]*'(P)'),cex.axis=legend_size,cex.lab=legend_size,lwd=mainline_size,xlim=c(0,max(newposadd)),ylim=c(0,logPCoff*max(negloP)))
+        }
       }
       
       addHandlerChanged(ggpw, handler=function(h,...) {
@@ -7524,7 +7604,9 @@ addHandlerClicked(GCIMbutton,handler=function(h,...){
   GCIMSub()
 })
 
+
 FASTSub<-function(){
+  
   mrenv <- new.env()
   Sys.setenv(LANGUAGE="en")
   gnewtable<-function (items, multiple = FALSE, chosencol = 1, icon.FUN = NULL, 
@@ -7579,8 +7661,8 @@ FASTSub<-function(){
   lyt[1,1]<-importdata
   lyt[4,1]<-parset
   lyt[5,1]<-run
-  lyt[6,1]<-clear
-  lyt[7,1]<-savefile
+  lyt[6,1]<-savefile
+  lyt[7,1]<-clear
   lyt[11,1]<-manhattan
   lyt[12,1]<-qqplot
   lyt[16,1]<-helpfile
@@ -7600,7 +7682,7 @@ FASTSub<-function(){
                    variance among commercial inbred line of maize (Zea mays L.). Genetics 2005, 169:2267-2275.                  
                 
                 4. The software package is developed by Bo Huang, Yuan-Li Ni, Wen-Long Ren, Yang-Jun Wen & Yuan-Ming Zhang.
-                   ",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
+                ",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
   
   font(tb)<-c(size="x-large")
   lyt[1:20,2,expand=TRUE]<-nb1
@@ -8220,19 +8302,19 @@ FASTSub<-function(){
             locPop<-match(sameGenPop,namePop)
             ##revised
             filtername<-as.vector(mrenv$psmatrixRaw[2,2:nnppcol])
-            selectpsmatrix<-matrix(as.numeric(psmatrixPre[locPop,-1]),nrow = nrow(psmatrixPre))
+            selectpsmatrix<-matrix(as.numeric(psmatrixPre[locPop,-1]),nrow = length(locPop))
             psum<-apply(selectpsmatrix,1,sum)
             psum<-round(psum)
             sumps<-sum(psum)
             m<-dim(selectpsmatrix)[1]
-            if(sumps==m){
+            if(sumps>=m){
               filterps<-gwindow("Filter",visible=FALSE,width=300,height=120)
               filergp<-ggroup(container=filterps,expand=FALSE)
               filterlyt<-glayout(container = filergp)
-              filterlabel<-glabel("Please choose the column tha should be deleted in population structure Q matrix",container = filterlyt)
+              filterlabel<-glabel("Please choose the column that should be deleted in population structure Q matrix",container = filterlyt)
               filtercombo<-gcombobox(filtername,editable = TRUE,container =filterlyt)
               filterlabel1<-glabel("Filter:",container = filterlyt)
-              filterok<-gbutton("OK",container = filterlyt)
+              filterok<-gbutton(" OK ",container = filterlyt)
               filtercancel<-gbutton("Cancel",container = filterlyt)
               filterlyt[2,2:5]<-filterlabel
               filterlyt[4,2]<-filterlabel1
@@ -8339,6 +8421,9 @@ FASTSub<-function(){
     kk<-mrenv$kk
     flagps<-mrenv$flagps
     psmatrix<-mrenv$psmatrix
+    if(is.null(mrenv$svpal)==TRUE||is.null(mrenv$svmlod)==TRUE){
+      gmessage("Please set parameter!","Warning",icon="warning")
+    }
     if(is.null(gen)==TRUE)
     {
       gmessage("Please input correct genotype dataset!","Warning",icon="warning")
@@ -8356,7 +8441,7 @@ FASTSub<-function(){
       gmessage("Sample size between genotypic and phenotypic datasets are not same!","Error",icon="error")
     }
     
-    if((is.null(gen)==FALSE)&&(is.null(phe)==FALSE)&&(is.null(kk)==FALSE)&&((ncol(gen)==(nrow(phe)+2))))
+    if((is.null(gen)==FALSE)&&(is.null(phe)==FALSE)&&(is.null(kk)==FALSE)&&((ncol(gen)==(nrow(phe)+2)))&&is.null(mrenv$svpal)==FALSE&&is.null(mrenv$svmlod)==FALSE)
     {
       
       progress_bar$setText ( "Please be patient ..." )
@@ -9467,11 +9552,9 @@ FASTSub<-function(){
       
       if(mrenv$flagREMLE==1){
         REML.LRT.c2<-emma.REML.LRT.c.noalpha(ys=Y, xs=mydata, K=1, Z=C2, X0=W, ngrids=100, llim=-10, ulim=10, esp=1e-10) 
-        
       }
       if(mrenv$flagREMLE==0){
         REML.LRT.c2<-emma.ML.LRT.c.noalpha(ys=Y, xs=mydata, K=1, Z=C2, X0=W, ngrids=100, llim=-10, ulim=10, esp=1e-10) 
-        
       }
       REML.LRT.c2.new<-data.frame(REML.LRT.c2)
       mafall<-apply(snp1,1,maf.fun)
@@ -9491,6 +9574,7 @@ FASTSub<-function(){
       resp<-as.matrix(ress1[,3])
       pmin<-min(resp[resp!=0])
       locsub<-which(resp==0)
+      
       if(length(locsub)!=0){
         subvalue<-10^(1.1*log10(pmin))
         ress1[locsub,3]<-subvalue
@@ -9498,8 +9582,6 @@ FASTSub<-function(){
       }else{
         mrenv$ress1<-ress1
       }
-      
-      
       rowsnp <- dim(ress1)[1]
       mrenv$snpname <- numeric()
       snpname<-as.matrix(paste("rs",c(1:rowsnp),sep = ""))
@@ -9580,86 +9662,84 @@ FASTSub<-function(){
       
       Xemma<-data.frame(chr.locus=xnames,REML.LRT.c2.new)#all
       vid<-which(as.numeric(Xemma$ps)<=mrenv$svpal)
-      if(length(vid)==1){
-        snp.emma.opt<-matrix(xraw[vid,],1,)
-        xname.emma.opt<-matrix(snp.emma.opt[,1:2],1,)
-        snp4<-matrix(snp.emma.opt[,3:dim(snp.emma.opt)[2]],1,)
+      if(length(vid)==0){
+        gmessage("No QTN were detected!",icon = "info",parent = window,title="Info")
+        progress_bar$setText ( "Stop Running!" )
+      }else{
+        if(length(vid)==1){
+          snp.emma.opt<-matrix(xraw[vid,],1,)
+          xname.emma.opt<-matrix(snp.emma.opt[,1:2],1,)
+          mafall4.opt<-mafall4[vid,]
+          snp4<-matrix(snp.emma.opt[,3:dim(snp.emma.opt)[2]],1,)
+          xdata<-t(snp4)
+          xdata<-matrix(xdata,,1)
+        }else{
+          snp.emma.opt<-as.matrix(xraw[vid,])
+          xname.emma.opt<-snp.emma.opt[,1:2]
+          mafall4.opt<-mafall4[vid,]
+          snp4<-snp.emma.opt[,3:dim(snp.emma.opt)[2]]
+          xdata<-t(snp4)
+        }
+        
         xdata<-t(snp4)
-        xdata<-matrix(xdata,,1)
-      }else{
-        snp.emma.opt<-as.matrix(xraw[vid,])
-        xname.emma.opt<-snp.emma.opt[,1:2]
-        snp4<-snp.emma.opt[,3:dim(snp.emma.opt)[2]]
-        xdata<-t(snp4)
+        ydata<-Y
+        u1<-ebayes_EM(x=W,z=xdata,y=ydata)
+        emma.lod<-likelihood(xxn=W,xxx=xdata,yn=ydata,bbo=u1$u)
+        idslod<-which(emma.lod>=mrenv$svmlod)
+        if(length(idslod)==0){
+          gmessage("No QTN were detected!",icon = "info",parent = window,title="Info")
+          progress_bar$setText ( "Stop Running!" )
+        }else{
+          maf.snp.4<-mafall4.opt[idslod,]
+          if(length(idslod)==1){
+            chrlocus<-matrix(xname.emma.opt[idslod,],1,)
+          }else{
+            chrlocus<-as.matrix(xname.emma.opt[idslod,])
+          }
+          
+          pve.all<-(pve.fun(u1$u[idslod],maf.snp.4)/var(Y))*100
+          qtneffect<-matrix(u1$u[idslod],,1)
+          lodscore<-matrix(emma.lod[idslod],,1)
+          maff<-matrix(maf.snp.4$maf,,1)
+          r2<-matrix(pve.all,,1)
+          wanbefore<-cbind(qtneffect,lodscore,maff,r2)
+          wanbefore[which(abs(wanbefore)>1e-4)]<-round(wanbefore[which(abs(wanbefore)>1e-4)],4)
+          wanbefore[which(abs(wanbefore)<1e-4)]<-as.numeric(sprintf("%.4e", wanbefore[which(abs(wanbefore)<1e-4)]))
+          wan<-cbind(chrlocus,wanbefore)
+          phenotype.var<-var(Y)
+          sigma2<-u1$sigma2
+          pee<-matrix("",dim(wan)[1],1)
+          vess<-matrix("",dim(wan)[1],1)
+          pee[1]<-round(phenotype.var,4)
+          vess[1]<-round(sigma2,4)
+          
+          wan_len<-dim(wan)[1]
+          marker<-as.character()
+          snp<-as.character()
+          for(i in 1:wan_len){
+            chr_pos<-which(mrenv$parmsShow[,2]==wan[i,1])
+            new_matrix<-mrenv$parmsShow[chr_pos,]
+            posi_pos<-which(new_matrix[,3]==wan[i,2])
+            mark<-matrix(new_matrix[posi_pos,1],1,)
+            marker<-rbind(marker,mark)
+            sn<-matrix(new_matrix[posi_pos,11],1,)
+            snp<-rbind(snp,sn)
+          }
+          progress_bar$setFraction(98/100)
+          
+          mrenv$wan<-cbind(marker,wan,snp,vess,pee)
+          colnames(mrenv$wan)<-c("Marker","Chromosome","Marker position (bp)","QTN effect","LOD score","MAF","r2 (%)","Genotype  for code 1","Var_Error","Var_phen(total)")
+          wan<-mrenv$wan
+          if(exists("wan")==FALSE||is.null(wan)==TRUE)
+          {
+            gmessage("No result meets the requirements in the second step!","Info",icon="info")
+          }else{
+            tbdfe8<-gdfedit(wan,container=nb1,expand=TRUE,label="Result2")
+          }
+          progress_bar$setFraction(100/100)
+          progress_bar$setText("All done.")
+        }
       }
-      
-      xdata<-t(snp4)
-      ydata<-Y
-      u1<-ebayes_EM(x=W,z=xdata,y=ydata)
-      emma.lod<-likelihood(xxn=W,xxx=xdata,yn=ydata,bbo=u1$u)
-      idslod<-which(emma.lod>=mrenv$svmlod)
-      
-      if(length(idslod)==1){
-        snp.eb.opt<-matrix(snp.emma.opt[idslod,],1,)
-        snp.maf<-snp.eb.opt[,3:dim(snp.eb.opt)[2]]
-        snp.maf<-matrix(snp.maf,1,)
-        maf.snp<-apply(snp.maf,1,maf.fun)
-        chrlocus<-matrix(xname.emma.opt[idslod,],1,)
-      }else{
-        snp.eb.opt<-snp.emma.opt[idslod,]
-        snp.maf<-snp.eb.opt[,3:dim(snp.eb.opt)[2]]
-        maf.snp<-apply(snp.maf,1,maf.fun)
-        chrlocus<-as.matrix(xname.emma.opt[idslod,])
-      }
-      
-      maf.snp.1<-unlist(maf.snp)
-      maf.snp.2<-matrix(maf.snp.1,nrow = 4)
-      maf.snp.3<-t(maf.snp.2)
-      maf.snp.4<-data.frame(maf.snp.3)
-      names(maf.snp.4)<-c("p1","p2","p3","maf")
-      
-      pve.all<-(pve.fun(u1$u[idslod],maf.snp.4)/var(Y))*100
-      qtneffect<-matrix(u1$u[idslod],,1)
-      lodscore<-matrix(emma.lod[idslod],,1)
-      maff<-matrix(maf.snp.4$maf,,1)
-      r2<-matrix(pve.all,,1)
-      wanbefore<-cbind(qtneffect,lodscore,maff,r2)
-      wanbefore[which(abs(wanbefore)>1e-4)]<-round(wanbefore[which(abs(wanbefore)>1e-4)],4)
-      wanbefore[which(abs(wanbefore)<1e-4)]<-as.numeric(sprintf("%.4e", wanbefore[which(abs(wanbefore)<1e-4)]))
-      wan<-cbind(chrlocus,wanbefore)
-      phenotype.var<-var(Y)
-      sigma2<-u1$sigma2
-      pee<-matrix("",dim(wan)[1],1)
-      vess<-matrix("",dim(wan)[1],1)
-      pee[1]<-round(phenotype.var,4)
-      vess[1]<-round(sigma2,4)
-      
-      wan_len<-dim(wan)[1]
-      marker<-as.character()
-      snp<-as.character()
-      for(i in 1:wan_len){
-        chr_pos<-which(mrenv$parmsShow[,2]==wan[i,1])
-        new_matrix<-mrenv$parmsShow[chr_pos,]
-        posi_pos<-which(new_matrix[,3]==wan[i,2])
-        mark<-matrix(new_matrix[posi_pos,1],1,)
-        marker<-rbind(marker,mark)
-        sn<-matrix(new_matrix[posi_pos,11],1,)
-        snp<-rbind(snp,sn)
-      }
-      progress_bar$setFraction(98/100)
-      
-      mrenv$wan<-cbind(marker,wan,snp,vess,pee)
-      colnames(mrenv$wan)<-c("Marker","Chromosome","Marker position (bp)","QTN effect","LOD score","MAF","r2 (%)","Genotype  for code 1","Var_Error","Var_phen(total)")
-      wan<-mrenv$wan
-      if(exists("wan")==FALSE||is.null(wan)==TRUE)
-      {
-        gmessage("No result meets the requirements in the second step!","Info",icon="info")
-      }else{
-        tbdfe8<-gdfedit(wan,container=nb1,expand=TRUE,label="Result2")
-      }
-      progress_bar$setFraction(100/100)
-      progress_bar$setText("All done.")
-      
     }
   })
   
@@ -9991,9 +10071,2842 @@ FASTSub<-function(){
     })
   })
 }
-
 addHandlerClicked(FASTbutton,handler=function(h,...){
   FASTSub()
 })
 
+ISISsub<-function(){
+  
+  Sys.setenv(LANGUAGE="en")
+  mrenv <- new.env()
+  gnewtable<-function (items, multiple = FALSE, chosencol = 1, icon.FUN = NULL, 
+                       filter.column = NULL, filter.labels = NULL, filter.FUN = NULL, 
+                       handler = NULL, action = NULL, container = NULL, ..., toolkit = guiToolkit()) 
+  {
+    if (!missing(items)) {
+      if (is.vector(items)) 
+        items <- data.frame(.= items, stringsAsFactors = FALSE)
+      if (is.matrix(items)) 
+        items <- data.frame(items, stringsAsFactors = FALSE)
+    }
+    widget <- .gtable(toolkit, items = items, multiple = multiple, 
+                      chosencol = chosencol, icon.FUN = icon.FUN, filter.column = filter.column, 
+                      filter.labels = filter.labels, filter.FUN = filter.FUN, 
+                      handler = handler, action = action, container = container, 
+                      ...)
+    obj <- new("gTable", widget = widget, toolkit = toolkit)
+    return(obj)
+  }
+  
+  window<-gwindow(title="Iterative Sure Independence Screening EM-Bayesian LASSO (ISIS EM-BLASSO) ",visible=TRUE,width=1250,height=700,expand=TRUE)
+  importwin<-gwindow("Input Dataset",visible=FALSE,width=250,height=420)
+  gimpwin<-ggroup(container=importwin,expand=FALSE)
+  
+  includeps<-gwindow("Include population structure (Q matrix)?",visible=FALSE,width=400,height=150)
+  gps<-ggroup(container=includeps,expand=FALSE)
+  
+  plotwin<-gwindow("Plot of LOD Score against Genome Position",visible=FALSE,width=960,height=220)
+  gpw<-ggroup(container=plotwin,horizontal = FALSE,spacing = 10)
+  ggpw<-ggraphics(container=gpw)
+  choicesave<-gwindow("Save as ...",visible=FALSE,width=250,height=150)
+  gcsave<-ggroup(container=choicesave,expand=FALSE)
+  lyt<-glayout(container=window,spacing=13)
+  importdata<-gbutton("Input Dataset",container=lyt)
+  parset<-glabel("Critical P-value in ISIS EM-BLASSO",container=lyt)
+  parsetedit<-gedit("0.01",coerce.with = as.numeric,ontainer =lyt)
+  pvalue<-svalue(parsetedit)
+  plot<-gbutton("plot",container=lyt)
+  savefile<-gbutton(" Save ",container=lyt)
+  run<-gbutton("Run",container=lyt)
+  exit<-gbutton("Exit",container=lyt)
+  clear<-gbutton(" Clear ",container = lyt)
+  helpfile<-gbutton("User Manual",container=lyt)
+  
+  
+  lyt[1,1]<-importdata
+  lyt[4,1]<-parset
+  lyt[5,1]<-parsetedit
+  lyt[7,1]<-run
+  lyt[8,1]<-savefile
+  lyt[9,1]<-plot
+  
+  lyt[11,1]<-clear
+  lyt[16,1]<-helpfile
+  lyt[17,1]<-exit
+  
+  nb1<-gnotebook(tab.pos=3,closebuttons=TRUE,dontCloseThese=TRUE,container=lyt,expand=TRUE)
+  size(nb1)<-c(680,540)
+  tb<-gnewtable("     
+                1. Iterative sure independence screening EM-Bayesian LASSO algorithm for multi-locus genome-wide 
+                   association studies.
+                
+                2. Please cite: Tamba Cox Lwaka, Ni Yuan-Li, Zhang Yuan-Ming*. Iterative sure independence screening 
+                   EM-Bayesian LASSO algorithm for multi-locus genome-wide association studies. PLoS Computational 
+                   Biology 2017, DOI: 10.1371/journal.pcbi.1005357.
+                
+                3. Please cite: Zhang Yuan-Ming et al. Mapping quantitative trait loci using naturally occurring genetic
+                   variance among commercial inbred line of maize (Zea mays L.). Genetics 2005, 169:2267-2275.
+                
+                4. The software package is developed by Yuan-Li Ni, Cox Lwaka Tamba, Yuan-Ming Zhang.
+                
+                
+                ",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
+  
+  
+  lyt[1:18,2,expand=TRUE]<-nb1
+  
+  progress_bar <- gtkProgressBar( )
+  lyt[19,2,expand=TRUE]<-progress_bar
+  
+  font(tb)<-c(size="x-large")
+  addhandlerclicked(clear,handler = function(h,...){
+    progress_bar$setFraction(0/100)
+    progress_bar$setText("")
+    m<-length(nb1)
+    for(i in 1:(m-1)){
+      if(is.null(mrenv$wan)==FALSE){
+        wan<-NULL
+        result<-NULL
+        pp<-NULL
+        rm(pp,envir = as.environment(mrenv))
+        rm(wan,envir = as.environment(mrenv))
+        rm(result,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$genRaw)==FALSE){
+        genRaw<-NULL
+        rm(genRaw,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$pheRaw)==FALSE){
+        pheRaw<-NULL
+        rm(pheRaw,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$gen)==FALSE){
+        gen<-NULL
+        sameName<-NULL
+        needloc<-NULL
+        needGen<-NULL
+        newPhe<-NULL
+        newGen<-NULL
+        inputform<-NULL
+        rm(gen,envir = as.environment(mrenv))
+        rm(inputform,envir = as.environment(mrenv))
+        rm(sameName,envir = as.environment(mrenv))
+        rm(needloc,envir = as.environment(mrenv))
+        rm(needGen,envir = as.environment(mrenv))
+        rm(newPhe,envir = as.environment(mrenv))
+        rm(newGen,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$phe)==FALSE){
+        phe<-NULL
+        rm(phe,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$psmatrix)==FALSE){
+        psmatrix<-NULL
+        psmatrixRaw<-NULL
+        
+        rm(psmatrix,envir = as.environment(mrenv))
+        rm(psmatrixRaw,envir = as.environment(mrenv))
+      }
+      dispose(nb1)
+    }
+  })
+  
+  
+  addHandlerClicked(importdata,handler=function(h,...){
+    if(isExtant(importwin)==FALSE)
+    {
+      importwin<-gwindow("Input Dataset",visible=FALSE,width=250,height=420)
+      gimpwin<-ggroup(container=importwin,expand=FALSE)
+    }
+    lytimp<-glayout(container=gimpwin,spacing=13)
+    impchoose<-glabel("1. Choose dataset format",container=lytimp)
+    impfile1<-glabel("2. Input Genotypic and Phenotypic files",container=lytimp)
+    impprepare<-glabel("3. Sort & Transform for dataset",container=lytimp)
+    impfile2<-glabel("4. Population-structure (Q matrix) files",container=lytimp)
+    radioimp<-gradio(c("mrMLM numeric format","mrMLM character format","Hapmap (TASSEL) format"),selected=3,horizontal=FALSE,container=lytimp)
+    genotype<-gbutton("Genotype",container=lytimp)
+    phenotype<-gbutton("Phenotype",container=lytimp)
+    
+    population<-gbutton("Population Structure",container=lytimp)
+    preimp<-gbutton("Do",container=lytimp)
+    lytimp[1,2:5]<-impchoose
+    lytimp[2:4,2:5]<-radioimp
+    lytimp[5,2:5]<-impfile1
+    lytimp[6,2:4]<-genotype
+    lytimp[7,2:4]<-phenotype
+    lytimp[8,2:5]<-impprepare
+    lytimp[9,2:4]<-preimp
+    lytimp[10,2:5]<-impfile2
+    
+    lytimp[11,2:4]<-population
+    visible(importwin)<-TRUE
+    
+    addHandlerClicked(genotype,handler=function(h,...){
+      input1<-gfile(text="Select a file...",type="open",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+      
+      if(is.na(input1))
+      {
+        gmessage("Please input correct genotype data !","Warning",icon="warning")
+        
+      }else{
+        mrenv$genRaw<-as.matrix(read.csv(input1,header=FALSE))
+        showgenRaw<-mrenv$genRaw[-1,]
+        colnames(showgenRaw)<-mrenv$genRaw[1,]
+        showgenRaw<-as.data.frame(showgenRaw)
+        tbdfe1<-gdfedit(showgenRaw,container=nb1,expand=TRUE,label="Raw_Genotype") 
+      }
+    })
+    
+    addHandlerClicked(phenotype,handler=function(h,...){
+      input2<-gfile(text="Select a file...",type="open",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+      if(is.na(input2))
+      {
+        gmessage("Please input correct phenotype data !","Warning",icon="warning")
+        
+      }else{
+        pheRaw1<-as.matrix(read.csv(input2,header=FALSE)) 
+        pheRaw2<-pheRaw1[-1,]
+        pheRaw3<-as.data.frame(pheRaw2,stringsAsFactors=FALSE)
+        pheRaw4<-as.matrix(pheRaw3[is.na(pheRaw3[,2])==F,])
+        pheRawthem<-matrix(c(pheRaw1[1,1]," "),1,)
+        pheRaw<-rbind(pheRawthem,pheRaw4)
+        row.names(pheRaw)<-NULL
+        mrenv$pheRaw<-as.matrix(pheRaw)
+        showpheRaw<-pheRaw1[-1,]
+        colnames(showpheRaw)<-c(pheRaw1[1,1],"   ")
+        showpheRaw<-as.data.frame(showpheRaw)
+        tbdfe2<-gdfedit(showpheRaw,container=nb1,expand=TRUE,label="Raw_Phenotype")
+      }
+    })
+    
+    addHandlerClicked(preimp,handler=function(h,...){
+      if(svalue(radioimp)=="mrMLM numeric format"){
+        mrenv$inputform<-1
+        nameGen <- as.matrix(mrenv$genRaw[1,],1,)
+        namePhe <- as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName <- intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen <- match(mrenv$sameName,nameGen)
+        locPhe <- match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName <- matrix(c("rs#","chrom","pos","genotype for code 1"),1,)
+        hapHave <- intersect(nameGen,hapName)
+        locHap <- match(hapHave,nameGen)
+        newGenloc <- c(locHap,locGen)
+        newPheloc <- locPhe
+        newGen <- as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe <- as.matrix(mrenv$pheRaw[newPheloc,])
+        nnhap <- length(hapHave)
+        rownewGen <- dim(newGen)[1]
+        colnewGen <- dim(newGen)[2]
+        rownewPhe <- dim(newPhe)[1]
+        ###########To show on the table ----newGen
+        mrenv$newGen <-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----gen
+        locChr <- as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos <- as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc <- c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen <- mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }else if(svalue(radioimp)=="mrMLM character format"){
+        mrenv$inputform<-2
+        ##########To find the same name between genotype and phenotype
+        nameGen <- as.matrix(mrenv$genRaw[1,],1,)
+        namePhe <- as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName <- intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen <- match(mrenv$sameName,nameGen)
+        locPhe <- match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName <- matrix(c("rs#","chrom","pos"),1,)
+        hapHave <- intersect(nameGen,hapName)
+        locHap <- match(hapHave,nameGen)
+        newGenloc <- c(locHap,locGen)
+        newPheloc <- locPhe
+        newGen <- as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe <- as.matrix(mrenv$pheRaw[newPheloc,])
+        ##########Transfer ATCG to numeric
+        nnhap <- length(hapHave)
+        rownewGen <- dim(newGen)[1]
+        colnewGen <- dim(newGen)[2]
+        rownewPhe <- dim(newPhe)[1]
+        computeGen <- newGen[,(nnhap+1):colnewGen]
+        colComGen <- ncol(computeGen) 
+        referSam <- as.vector(computeGen[,1])
+        ATCGloc <- c(which(computeGen[,1]=="A"),which(computeGen[,1]=="T"),which(computeGen[,1]=="C"),which(computeGen[,1]=="G"))
+        NNRRloc <- setdiff(c(1:rownewGen),ATCGloc)
+        for(i in 2:colComGen)
+        {
+          if(length(NNRRloc)>0){
+            referSam[NNRRloc] <- as.vector(computeGen[NNRRloc,i])
+            ATCGlocLoop <- c(which(computeGen[NNRRloc,i]=="A"),which(computeGen[NNRRloc,i]=="T"),which(computeGen[NNRRloc,i]=="C"),which(computeGen[NNRRloc,i]=="G"))
+            NNRRloc <- setdiff(NNRRloc,NNRRloc[ATCGlocLoop]) 
+          }else{
+            break
+          }
+        }
+        for(i in 1:rownewGen)
+        {
+          tempSel1 <- as.vector(c(which(computeGen[i,]=="A"),which(computeGen[i,]=="T"),which(computeGen[i,]=="C"),which(computeGen[i,]=="G")))
+          tempSel2 <- as.vector(c(which(computeGen[i,]==referSam[i])))
+          notRef <- setdiff(tempSel1,tempSel2)
+          notATCG <- setdiff(c(1:colComGen),tempSel1)
+          computeGen[i,tempSel2] <- as.numeric(1)
+          computeGen[i,notRef] <- as.numeric(-1)
+          computeGen[i,notATCG] <- as.numeric(0)
+        }
+        outATCG<-referSam
+        ###########To show on the table ----newGen
+        newGen <- cbind(newGen[,1:nnhap],computeGen)
+        mrenv$newGen <-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----gen
+        locChr <- as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos <- as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc <- c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen<-mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }else if(svalue(radioimp)=="Hapmap (TASSEL) format"){
+        mrenv$inputform<-3
+        ##########To find the same name between genotype and phenotype
+        nameGen<-as.matrix(mrenv$genRaw[1,],1,)
+        namePhe<-as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName<-intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen<-match(mrenv$sameName,nameGen)
+        locPhe<-match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName<-matrix(c("rs#","alleles","chrom","pos","strand","assembly#","center","protLSID","assayLSID","panel","QCcode"),1,)
+        hapHave<-intersect(nameGen,hapName)
+        locHap<-match(hapHave,nameGen)
+        newGenloc<-c(locHap,locGen)
+        newPheloc<-locPhe
+        newGen<-as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe<-as.matrix(mrenv$pheRaw[newPheloc,])   
+        ##########Transfer ATCG to numeric
+        nnhap<-length(hapHave)
+        rownewGen<-dim(newGen)[1]
+        colnewGen<-dim(newGen)[2]
+        rownewPhe<-dim(newPhe)[1]
+        computeGen<-newGen[,(nnhap+1):colnewGen]
+        colComGen<-ncol(computeGen) 
+        referSam<-as.vector(computeGen[,1])
+        ATCGloc<-c(which(computeGen[,1]=="AA"),which(computeGen[,1]=="TT"),which(computeGen[,1]=="CC"),which(computeGen[,1]=="GG"))
+        NNRRloc<-setdiff(c(1:rownewGen),ATCGloc)
+        for(i in 2:colComGen)
+        {
+          if(length(NNRRloc)>0){
+            referSam[NNRRloc]<-as.vector(computeGen[NNRRloc,i])
+            ATCGlocLoop<-c(which(computeGen[NNRRloc,i]=="AA"),which(computeGen[NNRRloc,i]=="TT"),which(computeGen[NNRRloc,i]=="CC"),which(computeGen[NNRRloc,i]=="GG"))
+            NNRRloc<-setdiff(NNRRloc,NNRRloc[ATCGlocLoop]) 
+          }else{
+            break
+          }
+        }
+        for(i in 1:rownewGen)
+        {
+          tempSel1<-as.vector(c(which(computeGen[i,]=="AA"),which(computeGen[i,]=="TT"),which(computeGen[i,]=="CC"),which(computeGen[i,]=="GG")))
+          tempSel2<-as.vector(c(which(computeGen[i,]==referSam[i])))
+          notRef<-setdiff(tempSel1,tempSel2)
+          notATCG<-setdiff(c(1:colComGen),tempSel1)
+          computeGen[i,tempSel2]<-as.numeric(1)
+          computeGen[i,notRef]<-as.numeric(-1)
+          computeGen[i,notATCG]<-as.numeric(0)
+        }
+        outATCG<-referSam
+        ###########To show on the table ----mrenv$newGen
+        newGen<-cbind(newGen[,1:nnhap],computeGen)
+        mrenv$newGen<-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----mrenv$gen
+        locChr<-as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos<-as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc<-c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen<-mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----mrenv$newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----mrenv$phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }
+    })
+    
+    addHandlerClicked(population,handler=function(h,...){
+      if(isExtant(includeps)==FALSE)
+      {
+        includeps<-gwindow("Include population structure (Q matrix)?",visible=FALSE,width=400,height=150)
+        gps<-ggroup(container=includeps,expand=FALSE)
+      }
+      lytps<-glayout(container=gps,spacing=13)
+      okps<-gbutton("     OK    ",container=lytps)
+      cancelps<-gbutton(" Cancel ",container=lytps)
+      radiops<-gradio(c("Not included in the model","Included"),selected=1,horizontal=FALSE,container=lytps)
+      lytps[2:3,2:5]<-radiops
+      lytps[5,2]<-okps
+      lytps[5,5]<-cancelps
+      visible(includeps)<-TRUE
+      addHandlerClicked(okps,handler=function(h,...){
+        if(svalue(radiops)=="Included"){
+          input4<-gfile(text="Select a file...",type="open",
+                        filter=list("All files"=list(patterns=c("*")),
+                                    "CSV files"=list(patterns=c("*.csv"))))
+          if(is.na(input4))
+          {
+            gmessage("Please input correct population data !","Warning",icon="warning")
+            
+          }else{
+            mrenv$psmatrixRaw<-as.matrix(read.csv(input4,header=FALSE))
+            nnpprow<-dim(mrenv$psmatrixRaw)[1]
+            nnppcol<-dim(mrenv$psmatrixRaw)[2]
+            mrenv$psmatrixRaw[1,2:nnppcol]<-"  "
+            psmatrixPre<-mrenv$psmatrixRaw[3:nnpprow,]
+            namePop<-as.matrix(psmatrixPre[,1])
+            sameGenPop<-intersect(mrenv$sameName,namePop)
+            locPop<-match(sameGenPop,namePop)
+            
+            ##revised
+            filtername<-as.vector(mrenv$psmatrixRaw[2,2:nnppcol])
+            selectpsmatrix<-matrix(as.numeric(psmatrixPre[locPop,-1]),nrow = length(locPop))
+            psum<-apply(selectpsmatrix,1,sum)
+            psum<-round(psum)
+            sumps<-sum(psum)
+            m<-dim(selectpsmatrix)[1]
+            if(sumps>=m){
+              filterps<-gwindow("Filter",visible=FALSE,width=300,height=120)
+              filergp<-ggroup(container=filterps,expand=FALSE)
+              filterlyt<-glayout(container = filergp)
+              filterlabel<-glabel("Please choose the column that should be deleted in population structure Q matrix",container = filterlyt)
+              filtercombo<-gcombobox(filtername,editable = TRUE,container =filterlyt)
+              filterlabel1<-glabel("Filter:",container = filterlyt)
+              filterok<-gbutton(" OK ",container = filterlyt)
+              filtercancel<-gbutton("Cancel",container = filterlyt)
+              filterlyt[2,2:5]<-filterlabel
+              filterlyt[4,2]<-filterlabel1
+              filterlyt[4,3]<-filtercombo
+              filterlyt[5,2]<-filterok
+              filterlyt[5,5]<-filtercancel
+              visible(filterps)<-TRUE
+              addhandlerclicked(filterok,handler = function(h,...){
+                combovalue<-svalue(filtercombo)
+                coldelet<-unlist(str_extract_all(combovalue,"[0-9]+"))
+                coldelet<-as.numeric(coldelet)
+                mrenv$psmatrix<-as.matrix(selectpsmatrix[,-coldelet])
+                mrenv$psmatrixRaw<-as.matrix(mrenv$psmatrixRaw[,-(coldelet+1)])
+                tbdfe6<-gdfedit(mrenv$psmatrixRaw,container=nb1,expand=TRUE,label="Population Structure")
+                dispose(filterps)
+                dispose(includeps)
+                dispose(importwin)
+              })
+              addhandlerclicked(filtercancel,handler = function(h,...){
+                dispose(filterps)
+              })
+              
+            }else{
+              mrenv$psmatrix<-selectpsmatrix
+              tbdfe6<-gdfedit(mrenv$psmatrixRaw,container=nb1,expand=TRUE,label="Population Structure")
+              
+              dispose(includeps)
+              dispose(importwin)
+            }
+          }
+        }else{     
+          enabled(population)<-FALSE
+          dispose(includeps)
+          dispose(importwin)
+        }
+      })
+      addhandlerclicked(cancelps,handler = function(h,...){
+        enabled(population)<-FALSE
+        dispose(includeps)
+        
+      })
+      
+    })
+  })
+  
+  
+  addHandlerClicked(exit,handler=function(h,...){
+    gconfirm("Yes or no?",handler=function(h,...){dispose(window)})
+  })
+  
+  addHandlerClicked(run,handler=function(h,...){
+    gen<-mrenv$gen
+    y<-mrenv$phe
+    
+    ps<-mrenv$psmatrix
+    
+    if(is.null(gen)==TRUE)
+    {
+      gmessage("Please input correct genotype data !","Warning",icon="warning")
+      
+    }
+    if(is.null(y)==TRUE)
+    {
+      gmessage("Please input correct phenotype data !","Warning",icon="warning")
+      
+    }
+    
+    if((is.null(gen)==FALSE)&&(is.null(y)==FALSE)&&(ncol(gen)!=(nrow(y)+2)))
+    {
+      gmessage("Sample size between genotype and phenotype is inconsistent!","Error",icon="error")
+      
+    }
+    
+    if((is.null(gen)==FALSE)&&(is.null(y)==FALSE)&&((ncol(gen)==(nrow(y)+2))))
+    {
+      
+      progress_bar$setText ( "Please be patient ..." )
+      progress_bar$setFraction(2/100)
+      pvalue<-svalue(parsetedit)
+      set.seed(1)
+      X<-t(gen)
+      X1<-X[3:nrow(X),]
+      sig<-seq(1:ncol(X1))
+      x<-data.frame(X1)
+      y<-as.matrix(y)
+      le<-length(sig)
+      xnew<-x[sig]
+      pval<-pvalue
+      y1<-matrix(nrow=nrow(y),ncol=ncol(y))
+      
+      if (is.null(ps)==FALSE)
+      {
+        ps1<-cbind(matrix(1,nrow=nrow(y)),ps)
+        vhat<-solve(crossprod(ps1,ps1))%*%crossprod(ps1,y)
+        vhat1<-vhat[-1]
+        y1<-y-ps%*%vhat1
+      }else{
+        y1<-y 
+      }
+      y1<-as.matrix(y1)
+      
+      xxx<-xnew
+      mat<-vector()
+      
+      for (i in 1:le)
+      {
+        if (var(xxx[,i]>0)){
+          mat[i]<-cor.test(xxx[,i],y1)$p.value
+          progress_bar$setFraction((2+((41/le)*i))/100)
+        }else{
+          mat[i]<-1
+        }
+      }
+      
+      if(length(which(mat<pval))<=nrow(y)){
+        ee<-as.vector(which(mat<pval))
+      }else{
+        eef1<-as.vector(which(mat<pval))
+        larsres<-lars(X1[,eef1], y1, type = "lar",trace = FALSE, normalize = TRUE, intercept = TRUE, eps = .Machine$double.eps, use.Gram=FALSE) 
+        larsc<-eef1[which(larsres$entry!=0)]
+        if(length(which(larsres$entry>nrow(y1)))!=0)
+        {
+          adee1<-eef1[which(larsres$entry>nrow(y1))]
+          ee<-larsc[!larsc%in%adee1]
+        }else{
+          ee<-larsc
+        }
+      }
+      xxxnew<-X1[,sig[ee]]
+      yyy<-y1
+      
+      cvfit1 <- ncvreg::cv.ncvreg(scale(xxxnew), yyy, family="gaussian",penalty="SCAD", gamma=3.7,warn=FALSE)
+      progress_bar$setFraction(55/100)
+      fit1 <- cvfit1$fit
+      obj11 <- (as.vector(fit1$beta[,cvfit1$min]))
+      obj1<-obj11[-1]
+      sig1a<-which(abs(obj1)!=0)
+      sig1b<-sig[-(sig[ee][sig1a])]
+      yyy1<-y1-(X1[,sig[ee][sig1a]]%*%as.matrix(obj1[sig1a]))
+      xxx1<-X1[,sig1b]
+      mat1<-vector()
+      
+      for (i in 1:length(sig1b))
+      {
+        if (var(xxx1[,i]>0)){
+          progress_bar$setFraction((55+(35/length(sig1b))*i)/100)
+          mat1[i]<-cor.test(xxx1[,i],yyy1)$p.value
+        }else{
+          mat1[i]<-1
+        }
+      }
+      
+      lee1<-which(mat1<pval)
+      if (length(lee1)==0)
+      {
+        sigg<-sort(c(sig[ee][sig1a]))
+      }
+      if((length(lee1)>0)&(length(lee1)<nrow(y)))
+      {
+        ee1<-as.vector(lee1)
+        xxxnew1<-X1[,sig1b[ee1]]
+        cvfit2 <- ncvreg::cv.ncvreg(scale(xxxnew1), yyy1, family="gaussian",penalty="SCAD", gamma=3.7,warn=FALSE)
+        progress_bar$setFraction(95/100)
+        fit2 <- cvfit2$fit
+        obj22 <- (as.vector(fit2$beta[,cvfit2$min]))
+        obj2<-obj22[-1]
+        sig1c<-sig1b[ee1][which(abs(obj2)!=0)]
+        sigg<-sort(c(sig[ee][sig1a],sig1c))
+      }
+      
+      if((length(lee1)>nrow(y)))
+      {
+        eef2<-as.vector(which(mat1<pval))
+        larsres2<-lars(X1[,sig1b[eef2]], yyy1, type = "lar",trace = FALSE, normalize = TRUE, intercept = TRUE, eps = .Machine$double.eps, use.Gram=FALSE) 
+        progress_bar$setFraction(95/100)
+        larsc2<-eef2[which(larsres2$entry!=0)]
+        if(length(which(larsres2$entry>nrow(y1)))!=0)
+        {
+          adee2<-eef2[which(larsres2$entry>nrow(y1))]
+          ee1<-larsc2[!larsc2%in%adee2]
+        }else{
+          ee1<-larsc2
+        }
+        xxxnew1<-X1[,sig1b[ee1]]
+        cvfit2 <- ncvreg::cv.ncvreg(scale(xxxnew1), yyy1, family="gaussian",penalty="SCAD", gamma=3.7,warn=FALSE)
+        fit2 <- cvfit2$fit
+        obj22 <- (as.vector(fit2$beta[,cvfit2$min]))
+        obj2<-obj22[-1]
+        sig1c<-sig1b[ee1][which(abs(obj2)!=0)]
+        sigg<-sort(c(sig[ee][sig1a],sig1c))
+      }
+      
+      le1<-length(sigg)
+      xxxnew11<-X1[,sigg]
+      #2010 EM_Lasso
+      Lasso_EM<-function(x,z,y)
+      {
+        n<-nrow(z);k<-ncol(z)
+        b<-solve(crossprod(x,x))%*%(crossprod(x,y))
+        v0<-as.numeric(crossprod((y-x%*%b),(y-x%*%b))/n)
+        u<-matrix(rep(0,k),k,1)
+        v<-matrix(rep(0,k),k,1)
+        s<-matrix(rep(0,k),k,1)
+        for(i in 1:k)
+        {
+          zz<-z[,i]
+          s[i]<-((crossprod(zz,zz)+1e-100)^(-1))*v0
+          u[i]<-s[i]*crossprod(zz,(y-x%*%b))/v0
+          v[i]<-u[i]^2+s[i]
+        }
+        vv<-matrix(rep(0,n*n),n,n);
+        for(i in 1:k)
+        {
+          zz<-z[,i]
+          vv=vv+tcrossprod(zz,zz)*v[i]
+        }
+        vv<-vv+diag(n)*v0
+        iter<-0;err<-1000;iter_max<-5000;err_max<-1e-10
+        tau<-0;omega<-0
+        while((iter<iter_max)&&(err>err_max))
+        {
+          iter<-iter+1
+          v01<-v0
+          v1<-v
+          b1<-b
+          vi<-solve(vv)
+          xtv<-crossprod(x,vi)
+          if(ncol(x)==1)
+          {
+            b<-((xtv%*%x)^(-1))*(xtv%*%y)
+          }else
+          {
+            b<-solve(xtv%*%x)%*%(xtv%*%y)
+          }
+          r<-y-x%*%b
+          ss<-matrix(rep(0,n),n,1)
+          for(i in 1:k)
+          {
+            zz<-z[,i]
+            zztvi<-crossprod(zz,vi)
+            u[i]<-v[i]*zztvi%*%r
+            s[i]<-v[i]*(1-zztvi%*%zz*v[i])
+            v[i]<-(u[i]^2+s[i]+omega)/(tau+3)
+            ss<-ss+zz*u[i]
+          }
+          v0<-as.numeric(crossprod(r,(r-ss))/n)
+          vv<-matrix(rep(0,n*n),n,n)
+          for(i in 1:k)
+          {
+            zz<-z[,i]
+            vv<-vv+tcrossprod(zz,zz)*v[i]
+          }
+          vv<-vv+diag(n)*v0
+          err<-(crossprod((b1-b),(b1-b))+(v01-v0)^2+crossprod((v1-v),(v1-v)))/(2+k)
+          beta<-t(b)
+          sigma2<-v0
+        }
+        return (list(u=u,sigma2=sigma2))
+      }
+      
+      z<-matrix()
+      
+      if (is.null(ps)==FALSE)
+      {
+        z<-cbind(matrix(1,nrow(X1),1),ps) 
+        
+      }else{
+        z<-matrix(1,nrow(X1),1)
+      }
+      
+      u1<-Lasso_EM(z,xxxnew11,y)
+      obj3<-u1$u 
+      
+      result1<-matrix(0,ncol(X1)*1,ncol=1,nrow=ncol(X1))
+      for (i in 1: le1)
+      {
+        result1[(sigg)[i],1]=obj3[i]
+      }
+      Res<- t(as.matrix((rowSums(result1)/ncol(result1))))
+      Res1<-as.vector(Res)	
+      le2<-length(which(abs(Res1)>1e-5))
+      if(le2==0){
+        gmessage("No QTN were detected!",icon = "info",parent = window,title="Info")
+        progress_bar$setText ( "Stop Running!" )
+      }else{
+        sig1<-which(abs(Res1)>1e-5)
+        bbo<-matrix(0,le2,1)
+        for (i in 1:le2){
+          bbo[i,]=Res1[sig1[i]]
+        }
+        her<-vector(length=le2)
+        for (i in 1:le2){
+          p1<-length(as.vector(which(X1[,sig1[i]]==1)))/length(X1[,sig1[i]])
+          p2<-1-p1
+          her[i]=(((p1+p2)-(p1-p2)^2)*(Res1[sig1[i]])^2)/var(y)*100
+        }
+        
+        xxxx<-X1[,sig1]
+        yn<-as.matrix(y)
+        xxn<-z
+        
+        multivanormal<-function(y,mean,sigma)
+        {
+          pdf_value<-(1/sqrt(2*3.14159265358979323846*sigma))*exp(-(y-mean)*(y-mean)/(2*sigma));
+          return (pdf_value)
+        }
+        
+        likelihood<-function(xxn,xxx,yn,bbo)
+        {
+          nq<-ncol(xxx)
+          ns<-nrow(yn)
+          at1<-0
+          ww1<-as.matrix(which(abs(bbo)>1e-5))
+          at1<-dim(ww1)[1]
+          lod<-matrix(rep(0,nq),nq,1)
+          if(at1>0.5){
+            ad<-cbind(xxn,xxx[,ww1])
+          }else{
+            ad<-xxn
+          }
+          if(abs(min(eigen(crossprod(ad,ad))$values))<1e-6){
+            bb<-solve(crossprod(ad,ad)+diag(ncol(ad))*0.01)%*%crossprod(ad,yn)
+          }else{
+            bb<-solve(crossprod(ad,ad))%*%crossprod(ad,yn)
+          }
+          vv1<-as.numeric(crossprod((yn-ad%*%bb),(yn-ad%*%bb))/ns)
+          ll1<-sum(log(abs(multivanormal(yn,ad%*%bb,vv1))))
+          sub<-1:ncol(ad)
+          if(at1>0.5)
+          {
+            for(i in 1:at1)
+            {
+              ij<-which(sub!=sub[i+ncol(xxn)])
+              ad1<-ad[,ij]
+              if(abs(min(eigen(crossprod(ad1,ad1))$values))<1e-6){
+                bb1<-solve(crossprod(ad1,ad1)+diag(ncol(ad1))*0.01)%*%crossprod(ad1,yn)
+              }else{
+                bb1<-solve(crossprod(ad1,ad1))%*%crossprod(ad1,yn) 
+              }
+              vv0<-as.numeric(crossprod((yn-ad1%*%bb1),(yn-ad1%*%bb1))/ns);
+              ll0<-sum(log(abs(multivanormal(yn,ad1%*%bb1,vv0))))
+              lod[ww1[i]]<--2.0*(ll0-ll1)/(2.0*log(10))
+            }
+          }
+          return (lod)
+        } 
+        lod<-likelihood(xxn,xxxx,yn,bbo)
+        progress_bar$setFraction(98/100)
+        ii<-as.vector(sig1)
+        qqq<-matrix(0,nrow=length(ii),ncol=6)
+        qqq[,1]=as.matrix(ii)
+        for (j in 1:length(ii)){
+          qqq[j,2]=X[1,ii[j]]
+          qqq[j,3]=X[2,ii[j]]
+          qqq[j,4]=result1[ii[j],]
+          
+          qqq[j,5]=lod[j]
+          qqq[j,6]=her[j]
+        }
+        id<-which(qqq[,5]==0)
+        if(length(id)==dim(qqq)[1]){
+          gmessage("No QTN were detected!",icon = "info",parent = window,title="Info")
+          progress_bar$setText ( "Stop Running!" )
+        }else{
+          if(length(id)!=0){
+            qqq1<-qqq[-id,]
+          }else{
+            qqq1<-qqq
+          }
+          
+          
+          xxmaf<-t(xxxx)
+          leng.maf<-dim(xxmaf)[2]
+          maf.fun<-function(snp){
+            leng<-length(snp)
+            snp1<-length(which(snp==1))
+            snp11<-length(which(snp==-1))
+            snp0<-length(which(snp==0))
+            maf<-min(snp1,snp11)/leng
+            return(maf)
+          }
+          
+          maf<-apply(xxmaf,1,maf.fun)
+          maf<-as.matrix(round(maf,4))
+          vee<-round(u1$sigma2,4)
+          pee<-round(var(y),4)
+          result<-as.matrix(qqq1[,-1])
+          vees<-matrix("",nrow = nrow(result),1)
+          pees<-matrix("",nrow = nrow(result),1)
+          pees[1,1]<-pee
+          vees[1,1]<-vee
+          result<-as.matrix(qqq1[,-1])
+          mrenv$result<-result
+          temp<-as.matrix(result[,3:5])
+          temp[which(abs(temp)>=1e-4)]<-round(temp[abs(temp)>=1e-4],4)
+          temp[which(abs(temp)<1e-4)]<-as.numeric(sprintf("%.4e",temp[abs(temp)<1e-4]))
+          wan<-cbind(result[,1:2],temp)
+          
+          if(mrenv$inputform==1){
+            mrenv$genRaw<-as.data.frame(mrenv$genRaw)
+            genraw<-mrenv$genRaw[-1,1:4]
+            
+            wan_len<-dim(wan)[1]
+            marker<-character()
+            snp<-character()
+            
+            for(i in 1:wan_len){
+              chr_pos<-which(genraw[,2]==wan[i,1])
+              new_matrix<-genraw[chr_pos,]
+              posi_pos<-which(new_matrix[,3]==wan[i,2])
+              mark<-matrix(new_matrix[posi_pos,1],1,)
+              marker<-rbind(marker,mark)
+              sn<-matrix(new_matrix[posi_pos,4],1,)
+              snp<-rbind(snp,sn)
+            }
+          }
+          if(mrenv$inputform==2){
+            
+            mrenv$genRaw<-as.data.frame(mrenv$genRaw)
+            genraw<-mrenv$genRaw[-1,1:4]
+            
+            wan_len<-dim(wan)[1]
+            marker<-character()
+            snp<-character()
+            for(i in 1:wan_len){
+              chr_pos<-which(genraw[,2]==wan[i,1])
+              new_matrix<-genraw[chr_pos,]
+              posi_pos<-which(new_matrix[,3]==wan[i,2])
+              mark<-matrix(new_matrix[posi_pos,1],1,)
+              marker<-rbind(marker,mark)
+              sn<-matrix(new_matrix[posi_pos,4],1,)
+              snp<-rbind(snp,sn)
+            }
+            
+          }
+          if(mrenv$inputform==3){
+            mrenv$genRaw<-as.data.frame(mrenv$genRaw)
+            genraw<-mrenv$genRaw[-1,c(1,3,4,12)]
+            
+            wan_len<-dim(wan)[1]
+            marker<-character()
+            snp<-character()
+            for(i in 1:wan_len){
+              chr_pos<-which(genraw[,2]==wan[i,1])
+              new_matrix<-genraw[chr_pos,]
+              posi_pos<-which(new_matrix[,3]==wan[i,2])
+              mark<-matrix(new_matrix[posi_pos,1],1,)
+              marker<-rbind(marker,mark)
+              sn<-matrix(new_matrix[posi_pos,4],1,)
+              snp<-rbind(snp,sn)
+            }
+          }
+          mrenv$wan<-cbind(marker,wan,maf,snp,vees,pees)
+          
+          colnames(mrenv$wan)<-c("RS#","Chromosome","Marker Position (bp)","QTN effect","LOD score","r2 (%)","MAF","Genotype  for code 1","Var_Error","Var_phen (total)")
+          
+          
+          if(is.null(mrenv$wan)==TRUE)
+          {
+            gmessage("There is no result meets the requirements in the second step!","Info",icon="info")
+          }else{
+            tbdfe8<-gdfedit(mrenv$wan,container=nb1,expand=TRUE,label="Result")
+          }
+          progress_bar$setFraction(100/100)
+          progress_bar$setText("All done.")
+        }
+      }
+    }
+  })
+  
+  addHandlerClicked(helpfile,handler=function(h,...){
+    RShowDoc("Instruction.pdf",package="mrMLM")   
+  })
+  
+  addHandlerClicked(savefile,handler=function(h,...){
+    
+    wan<-mrenv$wan
+    if(exists("wan")==FALSE||is.null(wan)==TRUE)
+    {
+      gmessage("There is no result meets the requirements in the second step!","Info",icon="info")
+      
+    }else{
+      output<-gfile(text="Save a file...",type="save",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+      write.table(wan,output,sep = ",",row.names=FALSE,col.names = TRUE) 
+    }
+  })
+  
+  
+  addHandlerClicked(plot,handler=function(h,...){
+    if(is.null(mrenv$gen)==TRUE){
+      gmessage("Please input correct genotype data !","Warning",icon="warning")
+      
+    }
+    if(is.null(mrenv$result)==TRUE){
+      gmessage("There is no result meets the requirements!","Info",icon="info")
+      
+    }
+    
+    if((is.null(mrenv$gen)==FALSE)&&(is.null(mrenv$result)==FALSE)){
+      
+      plotwin<-gwindow("Plot of LOD Score against Genome Position",visible=FALSE,width=960,height=250)
+      gpw<-ggroup(container=plotwin,horizontal = FALSE,spacing = 10)
+      ggpw<-ggraphics(container=gpw)
+      addSpring(gpw)
+      plotlyt<-glayout(container =gpw )
+      plotfram<-gframe(container =  plotlyt)
+      plotlabel<-glabel("Width (px):",container = plotlyt)
+      plotedit<-gedit("960",container = plotlyt)
+      widvalue<-svalue(plotedit)
+      plotlabel1<-glabel("Height (px):",container = plotlyt)
+      plotedit1<-gedit("240",container = plotlyt)
+      plotlabel2<-glabel("Word resolution (1/72 inch, ppi):",container = plotlyt)
+      plotedit2<-gedit("12",container = plotlyt)
+      plotlabel3 <- glabel("Figure resolution (ppi):",container = plotlyt)
+      plotedit3 <- gedit("72",container = plotlyt)
+      
+      combo_box <- gcombobox(c("blue","black","red","yellow","green","pink","purple","gray50","brown"),selected=3,,editable = TRUE,container = plotlyt)
+      plotlabel4 <- glabel("LOD line color:", container = plotlyt)
+      
+      
+      plotbt<-gbutton(" Save ",container =plotlyt )
+      plotlyt[1,2]<-plotlabel
+      plotlyt[1,3]<-plotedit
+      plotlyt[1,5]<-plotlabel1
+      plotlyt[1,6]<-plotedit1
+      plotlyt[1,8]<-plotlabel2
+      plotlyt[1,9]<-plotedit2
+      plotlyt[2,2]<-plotlabel3
+      plotlyt[2,3]<-plotedit3
+      plotlyt[2,5]<-plotlabel4
+      plotlyt[2,6]<-combo_box
+      
+      plotlyt[2,9]<-plotbt
+      
+      visible(plotwin) <- TRUE
+      
+      plotfu<-function(color1){
+        galaxyy<-as.matrix(mrenv$result)
+        chr_pos <- mrenv$gen[,1:2]
+        chr_num <- length(unique(chr_pos[,1]))
+        chr <- matrix(0,chr_num,1)
+        pos <- matrix(0,chr_num,1)
+        for(i in 1:chr_num)
+        {
+          temp <- numeric()
+          temp <- length(which(chr_pos[,1]==i))
+          if(i==1)
+          {
+            pos[i] <- temp
+            chr[i] <- chr_pos[pos[i],2]
+          }else{
+            pos[i] <- pos[i-1] + temp
+            chr[i] <- chr_pos[pos[i],2]
+          }
+        }
+        
+        pos_acc <- matrix(0,chr_num,1)
+        for(i in 1:chr_num)
+        {
+          if(i==1){
+            pos_acc[i] <- chr[i]
+          }else{
+            pos_acc[i] <- pos_acc[i-1] + chr[i]
+          }
+        }
+        
+        newres_pos <- galaxyy[,2]
+        res_sumpos <- pos_acc[galaxyy[which(galaxyy[,1]>1),1]-1] + galaxyy[which(galaxyy[,1]>1),2] 
+        newres_pos[which(galaxyy[,1]>1)] <- res_sumpos 
+        pospic<-c(newres_pos)
+        lodpic<-c(galaxyy[,4])  
+        mm<-round(max(pospic)/4000)
+        mm<-as.numeric(format(mm,digits = 1,scientific = TRUE))
+        pospicx<-pospic/mm
+        pos_acc1<-pos_acc/mm
+        resdf1 <- data.frame(pospicx,lodpic)
+        if(pospicx[1]<20){
+          pospicx[1]<-pospicx[1]+20
+        }
+        mrenv$pp <- ggplot(data=resdf1, aes(x=pospicx, y=lodpic)) +
+          geom_bar(stat="identity", width=0.5, fill="white", linetype="solid",color=color1)
+        mrenv$pp <- mrenv$pp + geom_vline(xintercept=c(0,pos_acc1),linetype="dashed",alpha=0.2)
+        mrenv$pp <- mrenv$pp  + scale_x_continuous(expand=c(0,0),limits=c(0,(pos_acc1[dim(pos_acc1)[1]]+100))) +
+          scale_y_continuous(expand=c(0,0))
+        mrenv$pp <- mrenv$pp + xlab(paste("Genome position (",mm,"bp)",sep = "")) + ylab("LOD score") + ggtitle("") + theme_classic()
+        mrenv$pp <- mrenv$pp + theme(axis.title.y = element_text( vjust = 2,hjust=0.5,size = 14),
+                                     axis.title.x = element_text(vjust = -0.5,hjust=0.5,size = 14))
+        
+        mrenv$pp <- mrenv$pp + theme(panel.background = element_rect(fill = "white"))
+        mrenv$pp <- mrenv$pp + theme(text=element_text(family="mono"))
+        mrenv$pp <- mrenv$pp + theme(axis.line.y = element_line(colour = "black", linetype = "solid"),
+                                     axis.line.x = element_line(colour = "black", linetype = "solid"))
+        print(mrenv$pp)
+      }
+      addHandlerChanged(ggpw, handler=function(h,...) {
+        widqqvalue <- as.numeric(svalue(plotedit))
+        heightqqvalue <- as.numeric(svalue(plotedit1))
+        pointsizeqqvalue <- as.numeric(svalue(plotedit2))
+        resppi <- as.numeric(svalue(plotedit3))
+        color1<-svalue(combo_box)
+        plotfu(color1)
+      })
+      
+      addhandlerclicked(plotbt,handler = function(h,...){
+        widqqvalue <- as.numeric(svalue(plotedit))
+        heightqqvalue <- as.numeric(svalue(plotedit1))
+        pointsizeqqvalue <- as.numeric(svalue(plotedit2))
+        resppi <- as.numeric(svalue(plotedit3))
+        if(is.null(mrenv$pp)==TRUE)
+        {
+          gmessage("There is no result meets the requirements!","Info",icon="info")
+          
+        }else{
+          output <- gfile(text = "Save a file...", type = "save", 
+                          filter = list(`All files` = list(patterns = c("*")), 
+                                        `TIFF files` = list(patterns = c("*.tiff")),
+                                        `PNG files` = list(patterns = c("*.png")),
+                                        `JPEG files` = list(patterns = c("*.jpeg"))))
+          if((length(grep(".png",output))==1)||(length(grep(".PNG",output))==1)){
+            png(output, width=widqqvalue, height=heightqqvalue, units= "px", pointsize = pointsizeqqvalue,res=resppi)
+          }else if((length(grep(".tiff",output))==1)||(length(grep(".TIFF",output))==1)){
+            tiff(output, width=widqqvalue, height=heightqqvalue, units= "px", pointsize = pointsizeqqvalue,res=resppi)
+          }else if((length(grep(".jpeg",output)==1))||(length(grep(".JPEG",output))==1)){
+            jpeg(output, width=widqqvalue, height=heightqqvalue, units= "px", pointsize = pointsizeqqvalue,res=resppi)  
+          }else{
+            gmessage("Please input correct image format!")
+          }
+          
+          color1<-svalue(combo_box)
+          
+          plotfu(color1)
+          dev.off()
+        }
+      })
+    }
+  })
+}
+
+addhandlerclicked(ISISbutton,handler = function(h,...){
+  ISISsub()
+})
+
+pLARmEBsub<-function(){
+  Sys.setenv(LANGUAGE="en")
+  mrenv <- new.env()
+  gnewtable<-function (items, multiple = FALSE, chosencol = 1, icon.FUN = NULL, 
+                       filter.column = NULL, filter.labels = NULL, filter.FUN = NULL, 
+                       handler = NULL, action = NULL, container = NULL, ..., toolkit = guiToolkit()) 
+  {
+    if (!missing(items)) {
+      if (is.vector(items)) 
+        items <- data.frame(.= items, stringsAsFactors = FALSE)
+      if (is.matrix(items)) 
+        items <- data.frame(items, stringsAsFactors = FALSE)
+    }
+    widget <- .gtable(toolkit, items = items, multiple = multiple, 
+                      chosencol = chosencol, icon.FUN = icon.FUN, filter.column = filter.column, 
+                      filter.labels = filter.labels, filter.FUN = filter.FUN, 
+                      handler = handler, action = action, container = container, 
+                      ...)
+    obj <- new("gTable", widget = widget, toolkit = toolkit)
+    return(obj)
+  }
+  
+  window<-gwindow(title="polygene-background-control-based least angle regression plus Empirical Bayes (pLARmEB) ",visible=TRUE,width=1200,height=700,expand=TRUE)
+  importwin<-gwindow("Input Dataset",visible=FALSE,width=250,height=420)
+  gimpwin<-ggroup(container=importwin,expand=FALSE)
+  
+  includeps<-gwindow("Include population structure (Q matrix)?",visible=FALSE,width=400,height=150)
+  gps<-ggroup(container=includeps,expand=FALSE)
+  choicekk<-gwindow("Choose Kinship option",visible=FALSE,width=320,height=150)
+  gkk<-ggroup(container=choicekk,expand=FALSE)
+  plotwin<-gwindow("Plot of LOD Score against Genome Position",visible=FALSE,width=960,height=250)
+  gpw<-ggroup(container=plotwin,horizontal = FALSE,spacing = 10)
+  ggpw<-ggraphics(container=gpw)
+  parsetwin<-gwindow("Parameter Setting",visible=FALSE,width=260,height=270)
+  gpar<-ggroup(container=parsetwin,expand=FALSE)
+  choicesave<-gwindow("Save as ...",visible=FALSE,width=250,height=150)
+  gcsave<-ggroup(container=choicesave,expand=FALSE)
+  lyt<-glayout(container=window,spacing=13)
+  importdata<-gbutton("Input Dataset",container=lyt)
+  parset<-gbutton("Parameter Settings",container=lyt)
+  plot<-gbutton("plot",container=lyt)
+  savefile<-gbutton(" Save ",container=lyt)
+  run<-gbutton("Run",container=lyt)
+  exit<-gbutton("Exit",container=lyt)
+  clear<-gbutton(" Clear ",container = lyt)
+  helpfile<-gbutton("User Manual",container=lyt)
+  lyt[1,1]<-importdata
+  lyt[4,1]<-parset
+  lyt[6,1]<-run
+  lyt[7,1]<-savefile
+  lyt[8,1]<-plot
+  lyt[10,1]<-clear
+  lyt[11,1]<-helpfile
+  lyt[16,1]<-exit
+  
+  nb1<-gnotebook(tab.pos=3,closebuttons=TRUE,dontCloseThese=TRUE,container=lyt,expand=TRUE)
+  size(nb1)<-c(680,540)
+  tb<-gnewtable("     
+                1. Integration of least angle regression with empirical Bayes for multi-locus genome-wide association studies
+                
+                2. Please cite: Zhang Jin#, Feng Jian-Ying#, Ni Yuan-Li, Wen Yang-Jun, Niu Yuan, Tamba Cox Lwaka, Yue Chao, 
+                   Song Qi-Jian, Zhang Yuan-Ming*. Heredity 2017, Accepted.
+                
+                3. Please cite: Zhang Yuan-Ming et al. Mapping quantitative trait loci using naturally occurring genetic
+                   variance among commercial inbred line of maize (Zea mays L.). Genetics 2005, 169:2267-2275.
+                
+                4. The software package is developed by Yuan-Li Ni, Jin Zhang, Yuan-Ming Zhang.
+                
+                ",multiple=TRUE,container=nb1,expand=TRUE,label="About the software")
+  
+  
+  lyt[1:18,2,expand=TRUE]<-nb1
+  
+  progress_bar <- gtkProgressBar( )
+  lyt[19,2,expand=TRUE]<-progress_bar
+  
+  font(tb)<-c(size="x-large")
+  addhandlerclicked(clear,handler = function(h,...){
+    progress_bar$setFraction(0/100)
+    progress_bar$setText("")
+    m<-length(nb1)
+    for(i in 1:(m-1)){
+      if(is.null(mrenv$wan)==FALSE){
+        wan<-NULL
+        result<-NULL
+        pp<-NULL
+        rm(pp,envir = as.environment(mrenv))
+        rm(wan,envir = as.environment(mrenv))
+        rm(result,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$genRaw)==FALSE){
+        genRaw<-NULL
+        rm(genRaw,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$pheRaw)==FALSE){
+        pheRaw<-NULL
+        rm(pheRaw,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$gen)==FALSE){
+        gen<-NULL
+        sameName<-NULL
+        needloc<-NULL
+        needGen<-NULL
+        newPhe<-NULL
+        newGen<-NULL
+        outATCG<-NULL
+        inputform<-NULL
+        rm(gen,envir = as.environment(mrenv))
+        rm(inputform,envir = as.environment(mrenv))
+        rm(outATCG,envir = as.environment(mrenv))
+        rm(sameName,envir = as.environment(mrenv))
+        rm(needloc,envir = as.environment(mrenv))
+        rm(needGen,envir = as.environment(mrenv))
+        rm(newPhe,envir = as.environment(mrenv))
+        rm(newGen,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$phe)==FALSE){
+        phe<-NULL
+        rm(phe,envir = as.environment(mrenv))
+      }else if(is.null(mrenv$psmatrix)==FALSE){
+        psmatrix<-NULL
+        psmatrixRaw<-NULL
+        
+        rm(psmatrix,envir = as.environment(mrenv))
+        rm(psmatrixRaw,envir = as.environment(mrenv))
+      }
+      dispose(nb1)
+    }
+  })
+  
+  
+  addHandlerClicked(importdata,handler=function(h,...){
+    if(isExtant(importwin)==FALSE)
+    {
+      importwin<-gwindow("Input Dataset",visible=FALSE,width=250,height=420)
+      gimpwin<-ggroup(container=importwin,expand=FALSE)
+    }
+    lytimp<-glayout(container=gimpwin,spacing=13)
+    impchoose<-glabel("1. Choose dataset format",container=lytimp)
+    impfile1<-glabel("2. Input Genotypic and Phenotypic files",container=lytimp)
+    impprepare<-glabel("3. Sort & Transform for dataset",container=lytimp)
+    impfile2<-glabel("4. Population-structure (Q matrix) files",container=lytimp)
+    radioimp<-gradio(c("mrMLM numeric format","mrMLM character format","Hapmap (TASSEL) format"),selected=3,horizontal=FALSE,container=lytimp)
+    genotype<-gbutton("Genotype",container=lytimp)
+    phenotype<-gbutton("Phenotype",container=lytimp)
+    
+    population<-gbutton("Population Structure",container=lytimp)
+    preimp<-gbutton("Do",container=lytimp)
+    lytimp[1,2:5]<-impchoose
+    lytimp[2:4,2:5]<-radioimp
+    lytimp[5,2:5]<-impfile1
+    lytimp[6,2:4]<-genotype
+    lytimp[7,2:4]<-phenotype
+    lytimp[8,2:5]<-impprepare
+    lytimp[9,2:4]<-preimp
+    lytimp[10,2:5]<-impfile2
+    
+    lytimp[11,2:4]<-population
+    visible(importwin)<-TRUE
+    
+    addHandlerClicked(genotype,handler=function(h,...){
+      input1<-gfile(text="Select a file...",type="open",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+      
+      if(is.na(input1))
+      {
+        gmessage("Please input correct genotype data !","Warning",icon="warning")
+      }else{
+        mrenv$genRaw<-as.matrix(read.csv(input1,header=FALSE))
+        showgenRaw<-mrenv$genRaw[-1,]
+        colnames(showgenRaw)<-mrenv$genRaw[1,]
+        showgenRaw<-as.data.frame(showgenRaw)
+        tbdfe1<-gdfedit(showgenRaw,container=nb1,expand=TRUE,label="Raw_Genotype") 
+      }
+    })
+    
+    addHandlerClicked(phenotype,handler=function(h,...){
+      input2<-gfile(text="Select a file...",type="open",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+      if(is.na(input2))
+      {
+        gmessage("Please input correct phenotype data !","Warning",icon="warning")
+      }else{
+        pheRaw1<-as.matrix(read.csv(input2,header=FALSE)) 
+        pheRaw2<-pheRaw1[-1,]
+        pheRaw3<-as.data.frame(pheRaw2,stringsAsFactors=FALSE)
+        pheRaw4<-as.matrix(pheRaw3[is.na(pheRaw3[,2])==F,])
+        pheRawthem<-matrix(c(pheRaw1[1,1]," "),1,)
+        pheRaw<-rbind(pheRawthem,pheRaw4)
+        row.names(pheRaw)<-NULL
+        mrenv$pheRaw<-as.matrix(pheRaw)
+        showpheRaw<-pheRaw1[-1,]
+        colnames(showpheRaw)<-c(pheRaw1[1,1],"   ")
+        showpheRaw<-as.data.frame(showpheRaw)
+        tbdfe2<-gdfedit(showpheRaw,container=nb1,expand=TRUE,label="Raw_Phenotype")
+      }
+    })
+    
+    addHandlerClicked(preimp,handler=function(h,...){
+      if(svalue(radioimp)=="mrMLM numeric format"){
+        mrenv$inputform<-1
+        nameGen <- as.matrix(mrenv$genRaw[1,],1,)
+        namePhe <- as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName <- intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen <- match(mrenv$sameName,nameGen)
+        locPhe <- match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName <- matrix(c("rs#","chrom","pos","genotype for code 1"),1,)
+        hapHave <- intersect(nameGen,hapName)
+        locHap <- match(hapHave,nameGen)
+        newGenloc <- c(locHap,locGen)
+        newPheloc <- locPhe
+        newGen <- as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe <- as.matrix(mrenv$pheRaw[newPheloc,])
+        nnhap <- length(hapHave)
+        rownewGen <- dim(newGen)[1]
+        colnewGen <- dim(newGen)[2]
+        rownewPhe <- dim(newPhe)[1]
+        ###########To show on the table ----newGen
+        mrenv$newGen <-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----gen
+        locChr <- as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos <- as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc <- c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen <- mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }else if(svalue(radioimp)=="mrMLM character format"){
+        mrenv$inputform<-2
+        ##########To find the same name between genotype and phenotype
+        nameGen <- as.matrix(mrenv$genRaw[1,],1,)
+        namePhe <- as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName <- intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen <- match(mrenv$sameName,nameGen)
+        locPhe <- match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName <- matrix(c("rs#","chrom","pos"),1,)
+        hapHave <- intersect(nameGen,hapName)
+        locHap <- match(hapHave,nameGen)
+        newGenloc <- c(locHap,locGen)
+        newPheloc <- locPhe
+        newGen <- as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe <- as.matrix(mrenv$pheRaw[newPheloc,])
+        ##########Transfer ATCG to numeric
+        nnhap <- length(hapHave)
+        rownewGen <- dim(newGen)[1]
+        colnewGen <- dim(newGen)[2]
+        rownewPhe <- dim(newPhe)[1]
+        computeGen <- newGen[,(nnhap+1):colnewGen]
+        colComGen <- ncol(computeGen) 
+        referSam <- as.vector(computeGen[,1])
+        ATCGloc <- c(which(computeGen[,1]=="A"),which(computeGen[,1]=="T"),which(computeGen[,1]=="C"),which(computeGen[,1]=="G"))
+        NNRRloc <- setdiff(c(1:rownewGen),ATCGloc)
+        for(i in 2:colComGen)
+        {
+          if(length(NNRRloc)>0){
+            referSam[NNRRloc] <- as.vector(computeGen[NNRRloc,i])
+            ATCGlocLoop <- c(which(computeGen[NNRRloc,i]=="A"),which(computeGen[NNRRloc,i]=="T"),which(computeGen[NNRRloc,i]=="C"),which(computeGen[NNRRloc,i]=="G"))
+            NNRRloc <- setdiff(NNRRloc,NNRRloc[ATCGlocLoop]) 
+          }else{
+            break
+          }
+        }
+        for(i in 1:rownewGen)
+        {
+          tempSel1 <- as.vector(c(which(computeGen[i,]=="A"),which(computeGen[i,]=="T"),which(computeGen[i,]=="C"),which(computeGen[i,]=="G")))
+          tempSel2 <- as.vector(c(which(computeGen[i,]==referSam[i])))
+          notRef <- setdiff(tempSel1,tempSel2)
+          notATCG <- setdiff(c(1:colComGen),tempSel1)
+          computeGen[i,tempSel2] <- as.numeric(1)
+          computeGen[i,notRef] <- as.numeric(-1)
+          computeGen[i,notATCG] <- as.numeric(0)
+        }
+        mrenv$outATCG<-referSam
+        ###########To show on the table ----newGen
+        newGen <- cbind(newGen[,1:nnhap],computeGen)
+        mrenv$newGen <-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----gen
+        locChr <- as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos <- as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc <- c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen<-mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }else if(svalue(radioimp)=="Hapmap (TASSEL) format"){
+        mrenv$inputform<-3
+        ##########To find the same name between genotype and phenotype
+        nameGen<-as.matrix(mrenv$genRaw[1,],1,)
+        namePhe<-as.matrix(mrenv$pheRaw[,1],,1)
+        mrenv$sameName<-intersect(nameGen,namePhe)
+        ##########To find the location of the same name 
+        locGen<-match(mrenv$sameName,nameGen)
+        locPhe<-match(mrenv$sameName,namePhe)
+        ##########Produce new genotype matrix and phenotype matrix
+        hapName<-matrix(c("rs#","alleles","chrom","pos","strand","assembly#","center","protLSID","assayLSID","panel","QCcode"),1,)
+        hapHave<-intersect(nameGen,hapName)
+        locHap<-match(hapHave,nameGen)
+        newGenloc<-c(locHap,locGen)
+        newPheloc<-locPhe
+        newGen<-as.matrix(mrenv$genRaw[-1,newGenloc])
+        newPhe<-as.matrix(mrenv$pheRaw[newPheloc,])   
+        ##########Transfer ATCG to numeric
+        nnhap<-length(hapHave)
+        rownewGen<-dim(newGen)[1]
+        colnewGen<-dim(newGen)[2]
+        rownewPhe<-dim(newPhe)[1]
+        computeGen<-newGen[,(nnhap+1):colnewGen]
+        colComGen<-ncol(computeGen) 
+        referSam<-as.vector(computeGen[,1])
+        ATCGloc<-c(which(computeGen[,1]=="AA"),which(computeGen[,1]=="TT"),which(computeGen[,1]=="CC"),which(computeGen[,1]=="GG"))
+        NNRRloc<-setdiff(c(1:rownewGen),ATCGloc)
+        for(i in 2:colComGen)
+        {
+          if(length(NNRRloc)>0){
+            referSam[NNRRloc]<-as.vector(computeGen[NNRRloc,i])
+            ATCGlocLoop<-c(which(computeGen[NNRRloc,i]=="AA"),which(computeGen[NNRRloc,i]=="TT"),which(computeGen[NNRRloc,i]=="CC"),which(computeGen[NNRRloc,i]=="GG"))
+            NNRRloc<-setdiff(NNRRloc,NNRRloc[ATCGlocLoop]) 
+          }else{
+            break
+          }
+        }
+        for(i in 1:rownewGen)
+        {
+          tempSel1<-as.vector(c(which(computeGen[i,]=="AA"),which(computeGen[i,]=="TT"),which(computeGen[i,]=="CC"),which(computeGen[i,]=="GG")))
+          tempSel2<-as.vector(c(which(computeGen[i,]==referSam[i])))
+          notRef<-setdiff(tempSel1,tempSel2)
+          notATCG<-setdiff(c(1:colComGen),tempSel1)
+          computeGen[i,tempSel2]<-as.numeric(1)
+          computeGen[i,notRef]<-as.numeric(-1)
+          computeGen[i,notATCG]<-as.numeric(0)
+        }
+        mrenv$outATCG<-referSam
+        ###########To show on the table ----mrenv$newGen
+        newGen<-cbind(newGen[,1:nnhap],computeGen)
+        mrenv$newGen<-rbind(mrenv$genRaw[1,newGenloc],newGen)
+        ###########To be computed ----mrenv$gen
+        locChr<-as.numeric(which(mrenv$newGen[1,]=="chrom"))
+        locPos<-as.numeric(which(mrenv$newGen[1,]=="pos"))
+        mrenv$needloc<-c(locChr,locPos,(nnhap+1):colnewGen)
+        mrenv$needGen<-mrenv$newGen[,mrenv$needloc]
+        mrenv$gen<-as.matrix(mrenv$needGen[-1,])
+        mrenv$gen<-matrix(as.numeric(mrenv$gen),nrow=nrow(mrenv$gen))
+        ###########To show on the table ----mrenv$newPhe
+        mrenv$pheRaw[1,2]<-"  "
+        mrenv$newPhe<-rbind(mrenv$pheRaw[1,],newPhe)
+        ###########To be computed ----mrenv$phe
+        mrenv$phe<-as.matrix(mrenv$newPhe[-1,-1])
+        mrenv$phe<-matrix(as.numeric(mrenv$phe),nrow=nrow(mrenv$phe))
+        shownewGen<-mrenv$newGen[-1,]
+        colnames(shownewGen)<-mrenv$newGen[1,]
+        shownewGen<-as.data.frame(shownewGen)
+        shownewPhe<-mrenv$newPhe[-1,]
+        colnames(shownewPhe)<-c(mrenv$newPhe[1,1],"   ")
+        shownewPhe<-as.data.frame(shownewPhe)
+        tbdfe3<-gdfedit(shownewGen,container=nb1,expand=TRUE,label="Genotype")
+        tbdfe4<-gdfedit(shownewPhe,container=nb1,expand=TRUE,label="Phenotype")
+      }
+    })
+    
+    addHandlerClicked(population,handler=function(h,...){
+      if(isExtant(includeps)==FALSE)
+      {
+        includeps<-gwindow("Include population structure (Q matrix)?",visible=FALSE,width=400,height=150)
+        gps<-ggroup(container=includeps,expand=FALSE)
+      }
+      lytps<-glayout(container=gps,spacing=13)
+      okps<-gbutton("     OK    ",container=lytps)
+      cancelps<-gbutton(" Cancel ",container=lytps)
+      radiops<-gradio(c("Not included in the model","Included"),selected=1,horizontal=FALSE,container=lytps)
+      lytps[2:3,2:5]<-radiops
+      lytps[5,2]<-okps
+      lytps[5,5]<-cancelps
+      visible(includeps)<-TRUE
+      addHandlerClicked(okps,handler=function(h,...){
+        if(svalue(radiops)=="Included"){
+          input4<-gfile(text="Select a file...",type="open",
+                        filter=list("All files"=list(patterns=c("*")),
+                                    "CSV files"=list(patterns=c("*.csv"))))
+          if(is.na(input4))
+          {
+            gmessage("Please input correct population data !","Warning",icon="warning")
+          }else{
+            mrenv$psmatrixRaw<-as.matrix(read.csv(input4,header=FALSE))
+            nnpprow<-dim(mrenv$psmatrixRaw)[1]
+            nnppcol<-dim(mrenv$psmatrixRaw)[2]
+            mrenv$psmatrixRaw[1,2:nnppcol]<-"  "
+            psmatrixPre<-mrenv$psmatrixRaw[3:nnpprow,]
+            namePop<-as.matrix(psmatrixPre[,1])
+            sameGenPop<-intersect(mrenv$sameName,namePop)
+            locPop<-match(sameGenPop,namePop)
+            ##revised
+            filtername<-as.vector(mrenv$psmatrixRaw[2,2:nnppcol])
+            selectpsmatrix<-matrix(as.numeric(psmatrixPre[locPop,-1]),nrow = length(locPop))
+            psum<-apply(selectpsmatrix,1,sum)
+            psum<-round(psum)
+            sumps<-sum(psum)
+            m<-dim(selectpsmatrix)[1]
+            if(sumps>=m){
+              filterps<-gwindow("Filter",visible=FALSE,width=300,height=120)
+              filergp<-ggroup(container=filterps,expand=FALSE)
+              filterlyt<-glayout(container = filergp)
+              filterlabel<-glabel("Please choose to delete one column of population structure",container = filterlyt)
+              filtercombo<-gcombobox(filtername,container =filterlyt,editable = TRUE)
+              filterlabel1<-glabel("Filter:",container = filterlyt)
+              filterok<-gbutton(" OK ",container = filterlyt)
+              filtercancel<-gbutton("Cancel",container = filterlyt)
+              filterlyt[2,2:5]<-filterlabel
+              filterlyt[4,4]<-filterlabel1
+              filterlyt[4,5]<-filtercombo
+              filterlyt[5,2]<-filterok
+              filterlyt[5,5]<-filtercancel
+              visible(filterps)<-TRUE
+              addhandlerclicked(filterok,handler = function(h,...){
+                combovalue<-svalue(filtercombo)
+                coldelet<-unlist(str_extract_all(combovalue,"[0-9]+"))
+                coldelet<-as.numeric(coldelet)
+                mrenv$psmatrix<-as.matrix(selectpsmatrix[,-coldelet])
+                mrenv$psmatrixRaw<-as.matrix(mrenv$psmatrixRaw[,-(coldelet+1)])
+                tbdfe6<-gdfedit(mrenv$psmatrixRaw,container=nb1,expand=TRUE,label="Population Structure")
+                dispose(filterps)
+                dispose(includeps)
+                dispose(importwin)
+              })
+              addhandlerclicked(filtercancel,handler = function(h,...){
+                dispose(filterps)
+              })
+              
+            }else{
+              mrenv$psmatrix<-selectpsmatrix
+              tbdfe6<-gdfedit(mrenv$psmatrixRaw,container=nb1,expand=TRUE,label="Population Structure")
+              
+              dispose(includeps)
+              dispose(importwin)
+            }
+          }
+        }else{     
+          enabled(population)<-FALSE
+          dispose(includeps)
+          dispose(importwin)
+        }
+      })
+      addhandlerclicked(cancelps,handler = function(h,...){
+        enabled(population)<-FALSE
+        dispose(includeps)
+        
+      })
+      
+    })
+  })
+  
+  addHandlerClicked(parset,handler=function(h,...){
+    if(isExtant(parsetwin)==FALSE)
+    {
+      parsetwin<-gwindow("Parameter Settings",visible=FALSE,width=260,height=270)
+      gpar<-ggroup(container=parsetwin,expand=FALSE)
+    }
+    lytpar<-glayout(container=gpar,spacing=13)
+    mrenv$pvallabel<-glabel("1.Critical LOD score in pLARmEB:",container=lytpar)
+    mrenv$pvaledit<-gedit("2",width=20,coerce.with=as.numeric,container=lytpar)
+    mrenv$radlabel<-glabel("2. The number of potentially associated variables selected by LARS:",container=lytpar)
+    mrenv$radedit<-gedit("50",width=20,coerce.with=as.numeric,container=lytpar)
+    
+    mrenv$okpar<-gbutton("     OK    ",container=lytpar)
+    mrenv$cancelpar<-gbutton(" Cancel ",container=lytpar)
+    lytpar[1,1:5]<-mrenv$pvallabel
+    lytpar[2,1:5]<-mrenv$pvaledit
+    lytpar[3,1:5]<-mrenv$radlabel
+    lytpar[4,1:5]<-mrenv$radedit
+    
+    lytpar[6,1]<-mrenv$okpar
+    lytpar[6,4]<-mrenv$cancelpar
+    visible(parsetwin)<-TRUE
+    addHandlerClicked(mrenv$okpar,handler=function(h,...){
+      mrenv$lodvalue<-svalue(mrenv$pvaledit)
+      mrenv$lars<-svalue(mrenv$radedit)
+      
+      if(mrenv$lodvalue<0)
+      {
+        gmessage("Please input critical LOD score: > 0 !","Warning",icon="warning")
+      }
+      if(mrenv$lars<0||mrenv$lars>=nrow(mrenv$phe))
+      {
+        gmessage("Please input the number of most relevant variables select by LARS: >0 and less than numbers of sample!","Warning",icon="warning")
+      }
+      
+      if((mrenv$lodvalue>0)&&mrenv$lars>0&&mrenv$lars<nrow(mrenv$phe))
+      {
+        dispose(parsetwin)
+      }
+    })
+    
+    addHandlerClicked(mrenv$cancelpar,handler=function(h,...){
+      mrenv$lodvalue<-svalue(mrenv$pvaledit)
+      mrenv$lars<-svalue(mrenv$radedit)
+      dispose(parsetwin)
+    })
+  })
+  
+  addHandlerClicked(exit,handler=function(h,...){
+    gconfirm("Yes or no?",handler=function(h,...){dispose(window)})
+  })
+  
+  addHandlerClicked(run,handler=function(h,...){
+    gene.data<-mrenv$gen
+    phe<-mrenv$phe
+    psmatrix<-mrenv$psmatrix
+    if(is.null(mrenv$lodvalue)==TRUE||is.null(mrenv$lars)==TRUE){
+      gmessage("Please set parameter!","Warning",icon="warning")
+    }
+    if(is.null(gene.data)==TRUE)
+    {
+      gmessage("Please input correct genotype data !","Warning",icon="warning")
+      
+    }
+    if(is.null(phe)==TRUE)
+    {
+      gmessage("Please input correct phenotype data !","Warning",icon="warning")
+      
+    }
+    
+    if((is.null(gene.data)==FALSE)&&(is.null(phe)==FALSE)&&(ncol(gene.data)!=(nrow(phe)+2)))
+    {
+      gmessage("Sample size between genotype and phenotype is inconsistent!","Error",icon="error")
+    }
+    
+    if((is.null(gene.data)==FALSE)&&(is.null(phe)==FALSE)&&((ncol(gene.data)==(nrow(phe)+2)))&&(is.null(mrenv$lodvalue)==FALSE)&&(is.null(mrenv$lars)==FALSE))
+    {
+      progress_bar$setText ( "Please be patient ..." )
+      progress_bar$setFraction(2/100)
+      emma.eigen.L <- function(Z,K,complete=TRUE) {
+        if ( is.null(Z) ) {
+          return(emma.eigen.L.wo.Z(K))
+        }
+        else {
+          return(emma.eigen.L.w.Z(Z,K,complete))
+        }
+      }
+      
+      emma.eigen.L.wo.Z <- function(K) {
+        eig <- eigen(K,symmetric=TRUE)
+        return(list(values=eig$values,vectors=eig$vectors))
+      }
+      
+      emma.eigen.L.w.Z <- function(Z,K,complete=TRUE) {
+        if ( complete == FALSE ) {
+          vids <- colSums(Z)>0
+          Z <- Z[,vids]
+          K <- K[vids,vids]
+        }
+        eig <- eigen(K%*%crossprod(Z,Z),symmetric=FALSE,EISPACK=TRUE)
+        return(list(values=eig$values,vectors=qr.Q(qr(Z%*%eig$vectors),complete=TRUE)))
+      }
+      
+      emma.eigen.R <- function(Z,K,X,complete=TRUE) {
+        if ( ncol(X) == 0 ) {
+          return(emma.eigen.L(Z,K))
+        }
+        else if ( is.null(Z) ) {
+          return(emma.eigen.R.wo.Z(K,X))
+        }
+        else {
+          return(emma.eigen.R.w.Z(Z,K,X,complete))
+        }
+      }
+      
+      emma.eigen.R.wo.Z <- function(K, X) {
+        n <- nrow(X)
+        q <- ncol(X)
+        S <- diag(n)-X%*%solve(crossprod(X,X))%*%t(X)
+        eig <- eigen(S%*%(K+diag(1,n))%*%S,symmetric=TRUE)
+        stopifnot(!is.complex(eig$values))
+        return(list(values=eig$values[1:(n-q)]-1,vectors=eig$vectors[,1:(n-q)]))
+      }
+      
+      emma.eigen.R.w.Z <- function(Z, K, X, complete = TRUE) {
+        if ( complete == FALSE ) {
+          vids <-  colSums(Z) > 0
+          Z <- Z[,vids]
+          K <- K[vids,vids]
+        }
+        n <- nrow(Z)
+        t <- ncol(Z)
+        q <- ncol(X)
+        
+        SZ <- Z - X%*%solve(crossprod(X,X))%*%crossprod(X,Z)
+        eig <- eigen(K%*%crossprod(Z,SZ),symmetric=FALSE,EISPACK=TRUE)
+        if ( is.complex(eig$values) ) {
+          eig$values <- Re(eig$values)
+          eig$vectors <- Re(eig$vectors)    
+        }
+        qr.X <- qr.Q(qr(X))
+        return(list(values=eig$values[1:(t-q)],
+                    vectors=qr.Q(qr(cbind(SZ%*%eig$vectors[,1:(t-q)],qr.X)),
+                                 complete=TRUE)[,c(1:(t-q),(t+1):n)]))   
+      }
+      
+      emma.delta.ML.LL.wo.Z <- function(logdelta, lambda, etas, xi) {
+        n <- length(xi)
+        delta <- exp(logdelta)
+        return( 0.5*(n*(log(n/(2*pi))-1-log(sum((etas*etas)/(delta*lambda+1))))-sum(log(delta*xi+1))) )  
+      }
+      
+      emma.delta.ML.LL.w.Z <- function(logdelta, lambda, etas.1, xi.1, n, etas.2.sq ) {
+        delta <- exp(logdelta)
+        return( 0.5*(n*(log(n/(2*pi))-1-log(sum(etas.1*etas.1/(delta*lambda+1))+etas.2.sq))-sum(log(delta*xi.1+1)) ))
+        
+      }
+      
+      emma.delta.ML.dLL.wo.Z <- function(logdelta, lambda, etas, xi) {
+        n <- length(xi)
+        delta <- exp(logdelta)
+        etasq <- etas*etas
+        ldelta <- delta*lambda+1
+        return( 0.5*(n*sum(etasq*lambda/(ldelta*ldelta))/sum(etasq/ldelta)-sum(xi/(delta*xi+1))) )
+      }
+      
+      emma.delta.ML.dLL.w.Z <- function(logdelta, lambda, etas.1, xi.1, n, etas.2.sq ) {
+        delta <- exp(logdelta)
+        etasq <- etas.1*etas.1
+        ldelta <- delta*lambda+1
+        return( 0.5*(n*sum(etasq*lambda/(ldelta*ldelta))/(sum(etasq/ldelta)+etas.2.sq)-sum(xi.1/(delta*xi.1+1))) )
+      }
+      
+      emma.delta.REML.LL.wo.Z <- function(logdelta, lambda, etas) {
+        nq <- length(etas)
+        delta <-  exp(logdelta)
+        return( 0.5*(nq*(log(nq/(2*pi))-1-log(sum(etas*etas/(delta*lambda+1))))-sum(log(delta*lambda+1))) )
+      }
+      
+      emma.delta.REML.LL.w.Z <- function(logdelta, lambda, etas.1, n, t, etas.2.sq ) {
+        tq <- length(etas.1)
+        nq <- n - t + tq
+        delta <-  exp(logdelta)
+        return( 0.5*(nq*(log(nq/(2*pi))-1-log(sum(etas.1*etas.1/(delta*lambda+1))+etas.2.sq))-sum(log(delta*lambda+1))) ) 
+      }
+      
+      emma.delta.REML.dLL.wo.Z <- function(logdelta, lambda, etas) {
+        nq <- length(etas)
+        delta <- exp(logdelta)
+        etasq <- etas*etas
+        ldelta <- delta*lambda+1
+        return( 0.5*(nq*sum(etasq*lambda/(ldelta*ldelta))/sum(etasq/ldelta)-sum(lambda/ldelta)) )
+      }
+      
+      emma.delta.REML.dLL.w.Z <- function(logdelta, lambda, etas.1, n, t1, etas.2.sq ) {
+        t <- t1
+        tq <- length(etas.1)
+        nq <- n - t + tq
+        delta <- exp(logdelta)
+        etasq <- etas.1*etas.1
+        ldelta <- delta*lambda+1
+        return( 0.5*(nq*sum(etasq*lambda/(ldelta*ldelta))/(sum(etasq/ldelta)+etas.2.sq)-sum(lambda/ldelta) ))
+      }
+      
+      emma.MLE <- function(y, X, K, Z=NULL, ngrids=100, llim=-10, ulim=10,
+                           esp=1e-10, eig.L = NULL, eig.R = NULL)
+      {
+        n <- length(y)
+        t <- nrow(K)
+        q <- ncol(X)
+        
+        stopifnot(ncol(K) == t)
+        stopifnot(nrow(X) == n)
+        
+        if ( det(crossprod(X,X)) == 0 ) {
+          warning("X is singular")
+          return (list(ML=0,delta=0,ve=0,vg=0))
+        }
+        
+        if ( is.null(Z) ) {
+          if ( is.null(eig.L) ) {
+            eig.L <- emma.eigen.L.wo.Z(K)
+          }
+          if ( is.null(eig.R) ) {
+            eig.R <- emma.eigen.R.wo.Z(K,X)
+          }
+          etas <- crossprod(eig.R$vectors,y)
+          
+          
+          logdelta <- (0:ngrids)/ngrids*(ulim-llim)+llim
+          m <- length(logdelta)
+          delta <- exp(logdelta)
+          
+          Lambdas.1<-matrix(eig.R$values,n-q,m)    
+          Lambdas <- Lambdas.1 * matrix(delta,n-q,m,byrow=TRUE)+1
+          Xis.1<-matrix(eig.L$values,n,m)
+          Xis <- Xis.1* matrix(delta,n,m,byrow=TRUE)+1 
+          Etasq <- matrix(etas*etas,n-q,m)
+          dLL <- 0.5*delta*(n*colSums(Etasq*Lambdas.1/(Lambdas*Lambdas))/colSums(Etasq/Lambdas)-colSums(Xis.1/Xis))
+          optlogdelta <- vector(length=0)
+          optLL <- vector(length=0)
+          if ( dLL[1] < esp ) {
+            optlogdelta <- append(optlogdelta, llim)
+            optLL <- append(optLL, emma.delta.ML.LL.wo.Z(llim,eig.R$values,etas,eig.L$values))
+          }
+          if ( dLL[m-1] > 0-esp ) {
+            optlogdelta <- append(optlogdelta, ulim)
+            optLL <- append(optLL, emma.delta.ML.LL.wo.Z(ulim,eig.R$values,etas,eig.L$values))
+          }
+          
+          for( i in 1:(m-1) )
+          {
+            if ( ( dLL[i]*dLL[i+1] < 0-esp*esp ) && ( dLL[i] > 0 ) && ( dLL[i+1] < 0 ) ) 
+            {
+              r <- uniroot(emma.delta.ML.dLL.wo.Z, lower=logdelta[i], upper=logdelta[i+1], lambda=eig.R$values, etas=etas, xi=eig.L$values)
+              optlogdelta <- append(optlogdelta, r$root)
+              optLL <- append(optLL, emma.delta.ML.LL.wo.Z(r$root,eig.R$values, etas, eig.L$values))
+            }
+          }
+        }
+        else {
+          if ( is.null(eig.L) ) {
+            eig.L <- emma.eigen.L.w.Z(Z,K)
+          }
+          if ( is.null(eig.R) ) {
+            eig.R <- emma.eigen.R.w.Z(Z,K,X)
+          }
+          etas <- crossprod(eig.R$vectors,y)
+          etas.1 <- etas[1:(t-q)]
+          etas.2 <- etas[(t-q+1):(n-q)]
+          etas.2.sq <- sum(etas.2*etas.2)
+          
+          logdelta <- (0:ngrids)/ngrids*(ulim-llim)+llim
+          
+          m <- length(logdelta)
+          delta <- exp(logdelta)
+          
+          Lambdas.1<-matrix(eig.R$values,t-q,m)
+          Lambdas <- Lambdas.1 * matrix(delta,t-q,m,byrow=TRUE) + 1
+          
+          Xis.1<-matrix(eig.L$values,t,m)
+          Xis <- Xis.1 * matrix(delta,t,m,byrow=TRUE) + 1  
+          Etasq <- matrix(etas.1*etas.1,t-q,m)
+          
+          dLL <- 0.5*delta*(n*colSums(Etasq*Lambdas.1/(Lambdas*Lambdas))/(colSums(Etasq/Lambdas)+etas.2.sq)-colSums(Xis.1/Xis))
+          optlogdelta <- vector(length=0)
+          optLL <- vector(length=0)
+          if ( dLL[1] < esp ) {
+            optlogdelta <- append(optlogdelta, llim)
+            optLL <- append(optLL, emma.delta.ML.LL.w.Z(llim,eig.R$values,etas.1,eig.L$values,n,etas.2.sq))
+          }
+          if ( dLL[m-1] > 0-esp ) {
+            optlogdelta <- append(optlogdelta, ulim)
+            optLL <- append(optLL, emma.delta.ML.LL.w.Z(ulim,eig.R$values,etas.1,eig.L$values,n,etas.2.sq))
+          }
+          
+          for( i in 1:(m-1) )
+          {
+            if ( ( dLL[i]*dLL[i+1] < 0-esp*esp ) && ( dLL[i] > 0 ) && ( dLL[i+1] < 0 ) ) 
+            {
+              r <- uniroot(emma.delta.ML.dLL.w.Z, lower=logdelta[i], upper=logdelta[i+1], lambda=eig.R$values, etas.1=etas.1, xi.1=eig.L$values, n=n, etas.2.sq = etas.2.sq )
+              optlogdelta <- append(optlogdelta, r$root)
+              optLL <- append(optLL, emma.delta.ML.LL.w.Z(r$root,eig.R$values, etas.1, eig.L$values, n, etas.2.sq ))
+            }
+          }
+        }
+        
+        maxdelta <- exp(optlogdelta[which.max(optLL)])
+        maxLL <- max(optLL)
+        if ( is.null(Z) ) {
+          maxve <- sum(etas*etas/(maxdelta*eig.R$values+1))/n    
+        }
+        else {
+          maxve <- (sum(etas.1*etas.1/(maxdelta*eig.R$values+1))+etas.2.sq)/n
+        }
+        maxvg <- maxve*maxdelta
+        
+        return (list(ML=maxLL,delta=maxdelta,ve=maxve,vg=maxvg))
+      }
+      
+      emma.REMLE <- function(y, X, K, Z=NULL, ngrids=100, llim=-10, ulim=10,
+                             esp=1e-10, eig.L = NULL, eig.R = NULL) {
+        n <- length(y)
+        t <- nrow(K)
+        q <- ncol(X)
+        
+        stopifnot(ncol(K) == t)
+        stopifnot(nrow(X) == n)
+        
+        if ( det(crossprod(X,X)) == 0 ) {
+          warning("X is singular")
+          return (list(REML=0,delta=0,ve=0,vg=0))
+        }
+        
+        if ( is.null(Z) ) {
+          if ( is.null(eig.R) ) {
+            eig.R <- emma.eigen.R.wo.Z(K,X)
+          }
+          etas <- crossprod(eig.R$vectors,y)
+          
+          logdelta <- (0:ngrids)/ngrids*(ulim-llim)+llim
+          m <- length(logdelta)
+          delta <- exp(logdelta)
+          
+          Lambdas.1<-matrix(eig.R$values,n-q,m)
+          Lambdas <- Lambdas.1 * matrix(delta,n-q,m,byrow=TRUE) + 1
+          Etasq <- matrix(etas*etas,n-q,m)
+          
+          dLL <- 0.5*delta*((n-q)*colSums(Etasq*Lambdas.1/(Lambdas*Lambdas))/colSums(Etasq/Lambdas)-colSums(Lambdas.1/Lambdas))
+          
+          optlogdelta <- vector(length=0)
+          optLL <- vector(length=0)
+          if ( dLL[1] < esp ) {
+            optlogdelta <- append(optlogdelta, llim)
+            optLL <- append(optLL, emma.delta.REML.LL.wo.Z(llim,eig.R$values,etas))
+          }
+          if ( dLL[m-1] > 0-esp ) {
+            optlogdelta <- append(optlogdelta, ulim)
+            optLL <- append(optLL, emma.delta.REML.LL.wo.Z(ulim,eig.R$values,etas))
+          }
+          
+          for( i in 1:(m-1) )
+          {
+            if ( ( dLL[i]*dLL[i+1] < 0-esp*esp ) && ( dLL[i] > 0 ) && ( dLL[i+1] < 0 ) ) 
+            {
+              r <- uniroot(emma.delta.REML.dLL.wo.Z, lower=logdelta[i], upper=logdelta[i+1], lambda=eig.R$values, etas=etas)
+              optlogdelta <- append(optlogdelta, r$root)
+              optLL <- append(optLL, emma.delta.REML.LL.wo.Z(r$root,eig.R$values, etas))
+            }
+          }
+        }
+        else {
+          if ( is.null(eig.R) ) {
+            eig.R <- emma.eigen.R.w.Z(Z,K,X)
+          }
+          etas <- crossprod(eig.R$vectors,y)
+          etas.1 <- etas[1:(t-q)]
+          etas.2 <- etas[(t-q+1):(n-q)]
+          etas.2.sq <- sum(etas.2*etas.2)
+          
+          logdelta <- (0:ngrids)/ngrids*(ulim-llim)+llim
+          m <- length(logdelta)
+          delta <- exp(logdelta)
+          
+          Lambdas.1 <- matrix(eig.R$values,t-q,m) 
+          Lambdas <- Lambdas.1 * matrix(delta,t-q,m,byrow=TRUE) + 1
+          Etasq <- matrix(etas.1*etas.1,t-q,m)
+          
+          dLL <- 0.5*delta*((n-q)*colSums(Etasq*Lambdas.1/(Lambdas*Lambdas))/(colSums(Etasq/Lambdas)+etas.2.sq)-colSums(Lambdas.1/Lambdas))
+          
+          optlogdelta <- vector(length=0)
+          optLL <- vector(length=0)
+          if ( dLL[1] < esp ) {
+            optlogdelta <- append(optlogdelta, llim)
+            optLL <- append(optLL, emma.delta.REML.LL.w.Z(llim,eig.R$values,etas.1,n,t,etas.2.sq))
+          }
+          if ( dLL[m-1] > 0-esp ) {
+            optlogdelta <- append(optlogdelta, ulim)
+            optLL <- append(optLL, emma.delta.REML.LL.w.Z(ulim,eig.R$values,etas.1,n,t,etas.2.sq))
+          }
+          
+          for( i in 1:(m-1) )
+          {
+            if ( ( dLL[i]*dLL[i+1] < 0-esp*esp ) && ( dLL[i] > 0 ) && ( dLL[i+1] < 0 ) ) 
+            {
+              r <- uniroot(emma.delta.REML.dLL.w.Z, lower=logdelta[i], upper=logdelta[i+1], lambda=eig.R$values, etas.1=etas.1, n=n, t1=t, etas.2.sq = etas.2.sq )
+              optlogdelta <- append(optlogdelta, r$root)
+              optLL <- append(optLL, emma.delta.REML.LL.w.Z(r$root,eig.R$values, etas.1, n, t, etas.2.sq ))
+            }
+          }
+        }  
+        
+        maxdelta <- exp(optlogdelta[which.max(optLL)])
+        maxLL <- max(optLL)
+        
+        if ( is.null(Z) ) {
+          maxve <- sum(etas*etas/(maxdelta*eig.R$values+1))/(n-q)    
+        }
+        else {
+          maxve <- (sum(etas.1*etas.1/(maxdelta*eig.R$values+1))+etas.2.sq)/(n-q)
+        }
+        maxvg <- maxve*maxdelta
+        return (list(REML=maxLL,delta=maxdelta,ve=maxve,vg=maxvg))
+      }
+      
+      emma.maineffects.B<-function(Z=NULL,K,deltahat.g,complete=TRUE){
+        if( is.null(Z) ){
+          return(emma.maineffects.B.Zo(K,deltahat.g))
+        }
+        else{
+          return(emma.maineffects.B.Z(Z,K,deltahat.g,complete))
+        }
+      }
+      
+      emma.maineffects.B.Zo <-function(K,deltahat.g){
+        t <- nrow(K)
+        stopifnot(ncol(K) == t)
+        
+        B<-deltahat.g*K+diag(1,t)
+        eig<-eigen(B,symmetric=TRUE)
+        qr.B<-qr(B)
+        q<-qr.B$rank
+        
+        stopifnot(!is.complex(eig$values))
+        
+        A<-diag(1/sqrt(eig$values[1:q]))
+        Q<-eig$vectors[,1:q]
+        C<-Q%*%A%*%t(Q)
+        return(list(mC=C,Q=Q,A=A))
+      }
+      
+      emma.maineffects.B.Z <- function(Z,K,deltahat.g,complete=TRUE){
+        if ( complete == FALSE ) {
+          vids <- colSums(Z)>0
+          Z <- Z[,vids]
+          K <- K[vids,vids]
+        }
+        
+        n <- nrow(Z)  
+        B <- deltahat.g*Z%*%K%*%t(Z)+diag(1,n)
+        eig <- eigen(B,symmetric=TRUE,EISPACK=TRUE)
+        qr.B<-qr(B)
+        q<-qr.B$rank
+        
+        stopifnot(!is.complex(eig$values))
+        
+        A<-diag(1/sqrt(eig$values[1:q]))
+        Q<-eig$vectors[,1:q]
+        C<-Q%*%A%*%t(Q)
+        return(list(mC=C,Q=Q,A=A,complete=TRUE))
+      }
+      
+      emma.MLE0.c <- function(Y_c,W_c){
+        
+        n <- length(Y_c)
+        
+        stopifnot(nrow(W_c)==n)
+        
+        M_c<-diag(1,n)-W_c%*%solve(crossprod(W_c,W_c))%*%t(W_c)
+        etas<-crossprod(M_c,Y_c)
+        
+        LL <- 0.5*n*(log(n/(2*pi))-1-log(sum(etas*etas)))
+        return(list(ML=LL))
+        
+      }
+      
+      emma.REMLE0.c <- function(Y_c,W_c){
+        
+        n <- length(Y_c)
+        
+        stopifnot(nrow(W_c)==n)
+        
+        M_c <-diag(1,n)-W_c%*%solve(crossprod(W_c,W_c))%*%t(W_c)
+        eig <-eigen(M_c)
+        t <-qr(W_c)$rank
+        v <-n-t
+        U_R <-eig$vector[,1:v]
+        etas<-crossprod(U_R,Y_c)
+        
+        LL <- 0.5*v*(log(v/(2*pi))-1-log(sum(etas*etas)))
+        return(list(REML=LL))
+      }
+      
+      multinormal<-function(y,mean,sigma)
+      {
+        pdf_value<-(1/sqrt(2*3.14159265358979323846*sigma))*exp(-(y-mean)*(y-mean)/(2*sigma));
+        return (pdf_value)
+      }
+      
+      lars <-  function(x, y, type = c("lasso", "lar", "forward.stagewise","stepwise"), trace = FALSE,
+                        normalize=TRUE, intercept=TRUE, Gram, 
+                        eps = .Machine$double.eps,  max.steps, use.Gram = TRUE)
+      {
+        
+        call <- match.call()
+        type <- match.arg(type)
+        TYPE <- switch(type,
+                       lasso = "LASSO",
+                       lar = "LAR",
+                       forward.stagewise = "Forward Stagewise",
+                       stepwise = "Forward Stepwise")
+        if(trace)
+          cat(paste(TYPE, "sequence\n"))
+        
+        nm <- dim(x)
+        n <- nm[1]
+        m <- nm[2]
+        im <- inactive <- seq(m)
+        one <- rep(1, n)
+        vn <- dimnames(x)[[2]]  
+        ### Center x and y, and scale x, and save the means and sds
+        if(intercept){
+          meanx <- drop(one %*% x)/n
+          x <- scale(x, meanx, FALSE)  # centers x
+          mu <- mean(y)
+          y <- drop(y - mu)
+        }
+        else {
+          meanx <- rep(0,m)
+          mu <- 0
+          y <- drop(y)
+        }
+        if(normalize){
+          normx <- sqrt(drop(one %*% (x^2)))
+          nosignal<-normx/sqrt(n) < eps
+          if(any(nosignal))# ignore variables with too small a variance
+          {
+            ignores<-im[nosignal]
+            inactive<-im[-ignores]
+            normx[nosignal]<-eps*sqrt(n)
+            if(trace)
+              cat("LARS Step 0 :\t", sum(nosignal), "Variables with Variance < eps; dropped for good\n")  #
+          }
+          else ignores <- NULL #singularities; augmented later as well
+          names(normx) <- NULL
+          x <- scale(x, FALSE, normx)	# scales x
+        }
+        else {
+          normx <- rep(1,m)
+          ignores <- NULL
+        }
+        if(use.Gram & missing(Gram)) {
+          if(m > 500 && n < m)
+            cat("There are more than 500 variables and n<m;\nYou may wish to restart and set use.Gram=FALSE\n"
+            )
+          if(trace)
+            cat("Computing X'X .....\n")
+          Gram <- t(x) %*% x	#Time saving
+        }
+        Cvec <- drop(t(y) %*% x)
+        ssy <- sum(y^2)	### Some initializations
+        residuals <- y
+        if(missing(max.steps))
+          max.steps <- 8*min(m, n-intercept)
+        beta <- matrix(0, max.steps + 1, m)	# beta starts at 0
+        lambda=double(max.steps)
+        Gamrat <- NULL
+        arc.length <- NULL
+        R2 <- 1
+        RSS <- ssy
+        first.in <- integer(m)
+        active <- NULL	# maintains active set
+        actions <- as.list(seq(max.steps))	
+        
+        drops <- FALSE
+        Sign <- NULL
+        R <- NULL	###
+        
+        k <- 0
+        while((k < max.steps) & (length(active) < min(m - length(ignores),n-intercept)) )
+        {
+          action <- NULL
+          C <- Cvec[inactive]	#
+          
+          Cmax <- max(abs(C))
+          if(Cmax<eps*100){ 
+            if(trace)cat("Max |corr| = 0; exiting...\n")
+            break
+          }
+          k <- k + 1
+          lambda[k]=Cmax
+          
+          if(!any(drops)) {
+            new <- abs(C) >= Cmax - eps
+            C <- C[!new]	# for later
+            new <- inactive[new]	# Get index numbers
+            
+            for(inew in new) {
+              if(use.Gram) {
+                R <- updateR(Gram[inew, inew], R, drop(Gram[
+                  inew, active]), Gram = TRUE,eps=eps)
+              }
+              else {
+                R <- updateR(x[, inew], R, x[, active], Gram
+                             = FALSE,eps=eps)
+              }
+              if(attr(R, "rank") == length(active)) {
+                
+                nR <- seq(length(active))
+                R <- R[nR, nR, drop = FALSE]
+                attr(R, "rank") <- length(active)
+                ignores <- c(ignores, inew)
+                action <- c(action,  - inew)
+                if(trace)
+                  cat("LARS Step", k, ":\t Variable", inew, 
+                      "\tcollinear; dropped for good\n")	#
+              }
+              else {
+                if(first.in[inew] == 0)
+                  first.in[inew] <- k
+                active <- c(active, inew)
+                Sign <- c(Sign, sign(Cvec[inew]))
+                action <- c(action, inew)
+                if(trace)
+                  cat("LARS Step", k, ":\t Variable", inew, 
+                      "\tadded\n")	#
+              }
+            }
+          }
+          else action <-  - dropid
+          Gi1 <- backsolve(R, backsolvet(R, Sign))	
+          
+          dropouts<-NULL
+          if(type == "forward.stagewise") {
+            directions <- Gi1 * Sign
+            if(!all(directions > 0)) {
+              if(use.Gram) {
+                nnls.object <- nnls.lars(active, Sign, R, 
+                                         directions, Gram[active, active], trace = 
+                                           trace, use.Gram = TRUE,eps=eps)
+              }
+              else {
+                nnls.object <- nnls.lars(active, Sign, R, 
+                                         directions, x[, active], trace = trace, 
+                                         use.Gram = FALSE,eps=eps)
+              }
+              positive <- nnls.object$positive
+              dropouts <-active[-positive]
+              action <- c(action, -dropouts)
+              active <- nnls.object$active
+              Sign <- Sign[positive]
+              Gi1 <- nnls.object$beta[positive] * Sign
+              R <- nnls.object$R
+              C <- Cvec[ - c(active, ignores)]
+            }
+          }
+          A <- 1/sqrt(sum(Gi1 * Sign))
+          w <- A * Gi1	# note that w has the right signs
+          if(!use.Gram) u <- drop(x[, active, drop = FALSE] %*% w)	###
+          
+          if( (length(active) >=  min(n-intercept, m - length(ignores) ) )|type=="stepwise") {
+            gamhat <- Cmax/A
+          }
+          else {
+            if(use.Gram) {
+              a <- drop(w %*% Gram[active,  - c(active,ignores), drop = FALSE])
+            }
+            else {
+              a <- drop(u %*% x[,  - c(active, ignores), drop=FALSE])
+            }
+            gam <- c((Cmax - C)/(A - a), (Cmax + C)/(A + a))	
+            
+            gamhat <- min(gam[gam > eps], Cmax/A)	
+          }
+          if(type == "lasso") {
+            dropid <- NULL
+            b1 <- beta[k, active]	# beta starts at 0
+            z1 <-  - b1/w
+            zmin <- min(z1[z1 > eps], gamhat)
+            if(zmin < gamhat) {
+              gamhat <- zmin
+              drops <- z1 == zmin
+            }
+            else drops <- FALSE
+          }
+          beta[k + 1,  ] <- beta[k,  ]
+          beta[k + 1, active] <- beta[k + 1, active] + gamhat * w
+          if(use.Gram) {
+            Cvec <- Cvec - gamhat * Gram[, active, drop = FALSE] %*% w
+          }
+          else {
+            residuals <- residuals - gamhat * u
+            Cvec <- drop(t(residuals) %*% x)
+          }
+          Gamrat <- c(Gamrat, gamhat/(Cmax/A))
+          arc.length <- c(arc.length, gamhat)	
+          if(type == "lasso" && any(drops)) {
+            dropid <- seq(drops)[drops]	
+            for(id in rev(dropid)) {
+              if(trace)
+                cat("Lasso Step", k+1, ":\t Variable", active[
+                  id], "\tdropped\n")
+              R <- downdateR(R, id)
+            }
+            dropid <- active[drops]
+            beta[k+1,dropid]<-0  
+            active <- active[!drops]
+            Sign <- Sign[!drops]
+          }
+          if(!is.null(vn))
+            names(action) <- vn[abs(action)]
+          actions[[k]] <- action
+          inactive <- im[ - c(active, ignores)]
+          if(type=="stepwise")Sign=Sign*0
+        }
+        beta <- beta[seq(k + 1), ,drop=FALSE ]	
+        lambda=lambda[seq(k)]
+        dimnames(beta) <- list(paste(0:k), vn)
+        if(trace)
+          cat("Computing residuals, RSS etc .....\n")
+        residuals <- y - x %*% t(beta)
+        beta <- scale(beta, FALSE, normx)
+        RSS <- apply(residuals^2, 2, sum)
+        R2 <- 1 - RSS/RSS[1]
+        actions=actions[seq(k)]
+        netdf=sapply(actions,function(x)sum(sign(x)))
+        df=cumsum(netdf)### This takes into account drops
+        if(intercept)df=c(Intercept=1,df+1)
+        else df=c(Null=0,df)
+        rss.big=rev(RSS)[1]
+        df.big=n-rev(df)[1]
+        if(rss.big<eps|df.big<eps)sigma2=NaN
+        else
+          sigma2=rss.big/df.big
+        Cp <- RSS/sigma2 - n + 2 * df
+        attr(Cp,"sigma2")=sigma2
+        attr(Cp,"n")=n
+        object <- list(call = call, type = TYPE, df=df, lambda=lambda,R2 = R2, RSS = RSS, Cp = Cp, 
+                       actions = actions[seq(k)], entry = first.in, Gamrat = Gamrat, 
+                       arc.length = arc.length, Gram = if(use.Gram) Gram else NULL, 
+                       beta = beta, mu = mu, normx = normx, meanx = meanx)
+        class(object) <- "lars"
+        object
+      }
+      
+      #2010 EM_Bayes
+      ebayes_EM<-function(x,z,y)
+      {
+        n<-nrow(z);k<-ncol(z)
+        b<-solve(crossprod(x,x))%*%(crossprod(x,y))
+        v0<-as.numeric(crossprod((y-x%*%b),(y-x%*%b))/n)
+        u<-matrix(rep(0,k),k,1)
+        v<-matrix(rep(0,k),k,1)
+        s<-matrix(rep(0,k),k,1)
+        for(i in 1:k)
+        {
+          zz<-z[,i]
+          s[i]<-((crossprod(zz,zz)+1e-100)^(-1))*v0
+          u[i]<-s[i]*crossprod(zz,(y-x%*%b))/v0
+          v[i]<-u[i]^2+s[i]
+        }
+        
+        iter<-0;err<-1000;iter_max<-100;err_max<-1e-6
+        tau<-0;omega<-0
+        while((iter<iter_max)&&(err>err_max))
+        {
+          iter<-iter+1
+          v01<-v0
+          v1<-v
+          b1<-b
+          v2i <- diag(n)*(1/v0)
+          v2k <- diag(c(v))
+          vcc <- v2i%*%z%*%v2k
+          vi <- v2i-vcc%*%solve(v2k+v2k%*%t(z)%*%vcc,tol= 1e-50)%*%v2k%*%t(z)%*%v2i
+          
+          xtv<-crossprod(x,vi)
+          if(ncol(x)==1)
+          {
+            b<-((xtv%*%x)^(-1))*(xtv%*%y)
+          }else
+          {
+            b<-solve(xtv%*%x)%*%(xtv%*%y)
+          }
+          r<-y-x%*%b
+          ss<-matrix(rep(0,n),n,1)
+          for(i in 1:k)
+          {
+            zz<-z[,i]
+            zztvi<-crossprod(zz,vi)
+            u[i]<-v[i]*zztvi%*%r
+            s[i]<-v[i]*(1-zztvi%*%zz*v[i])
+            v[i]<-(u[i]^2+s[i]+omega)/(tau+3)
+            ss<-ss+zz*u[i]
+          }
+          v0<-as.numeric(crossprod(r,(r-ss))/n)
+          err<-(crossprod((b1-b),(b1-b))+(v01-v0)^2+crossprod((v1-v),(v1-v)))/(2+k)
+          beta<-t(b)
+          sigma2<-v0
+        }
+        uuu <- rbind(b,u)
+        return (list(u=uuu,sigma2=sigma2))
+      }
+      
+      
+      likelihood<-function(xb,xxx,yn,ns)
+      {
+        nq <- nrow(xb)
+        ww1 <- numeric()
+        for(ii in 1:nq)
+        {
+          if(abs(xb[ii,1])>1e-3) ww1 <- cbind(ww1,ii)
+        }
+        lod<-matrix(rep(0,nq),1,nq)
+        ww1<-as.matrix(ww1)
+        at1<-0
+        at1<-dim(ww1)[2]
+        
+        if(at1>0.5)
+        {
+          ad<-cbind(xxx[,ww1])
+          if(abs(min(eigen(crossprod(ad,ad))$values))<1e-6)
+          {
+            bb<-solve(crossprod(ad,ad)+diag(ncol(ad))*0.01)%*%crossprod(ad,yn) 
+          }
+          else
+          {
+            bb<-solve(crossprod(ad,ad))%*%crossprod(ad,yn) 
+          }
+          vv1<-as.numeric(crossprod((yn-ad%*%bb),(yn-ad%*%bb))/ns);
+          ll1<-sum(log(abs(multinormal(yn,ad%*%bb,vv1))))
+          
+          sub<-1:ncol(ad)
+          for(i in 1:at1)
+          {
+            
+            ij<-which(sub!=sub[i])
+            ad1<-ad[,ij]
+            
+            if(abs(min(eigen(crossprod(ad1,ad1))$values))<1e-6)
+            {bb1<-solve(crossprod(ad1,ad1)+diag(ncol(ad1))*0.01)%*%crossprod(ad1,yn)}
+            else
+            {bb1<-solve(crossprod(ad1,ad1))%*%crossprod(ad1,yn)} 
+            vv0<-as.numeric(crossprod((yn-ad1%*%bb1),(yn-ad1%*%bb1))/ns);
+            ll0<-sum(log(abs(multinormal(yn,ad1%*%bb1,vv0))))
+            lod[ww1[i]]<--2.0*(ll0-ll1)/(2.0*log(10))
+          }
+        }
+        
+        w0 <- 1-pchisq(lod*2*log(10),1)
+        res <- rbind(lod,w0)
+        return (t(res))
+      }
+      
+      
+      Y.data<-as.matrix(phe)
+      if(is.null(psmatrix)==FALSE){
+        psmatrix<-as.matrix(psmatrix)
+      }
+      nsam <-ncol(gene.data)-2
+      chrnum<-length(unique(gene.data[,1]))
+      larsres <- numeric()
+      for(nchr in 1:chrnum)                            
+      {
+        
+        xxot <- as.matrix(gene.data[(gene.data[,1])!=nchr,3:ncol(gene.data)])
+        xot <-t(xxot)
+        nmarkot <-ncol(xot)
+        kk<-matrix(0,nsam,nsam)
+        for(k in 1:nmarkot)
+        {
+          z<-as.matrix(xot[,k])
+          kk<-kk+z%*%t(z)
+        }
+        progress_bar$setFraction((2+(90/chrnum)*nchr)/100)
+        cc<-mean(diag(kk))
+        K <- numeric()
+        K <- kk/cc
+        xx <- as.matrix(gene.data[gene.data[,1]==nchr,3:ncol(gene.data)])
+        YY <- matrix(Y.data,,1)
+        W.orig<-matrix(1,nsam,1)
+        if(is.null(psmatrix)==FALSE){
+          W <-cbind(W.orig,psmatrix)
+        }else{
+          W<-W.orig
+        }
+        res1 <- numeric()
+        remle2<-emma.REMLE(YY, W, K, Z=NULL, ngrids=100, llim=-10, ulim=10,esp=1e-10, eig.L = NULL, eig.R = NULL)
+        remle1.B1<-emma.maineffects.B(Z=NULL,K,remle2$delta)
+        C2<-remle1.B1$mC
+        Y_c <- C2%*%YY
+        W_c <- C2%*%W
+        G_c <- C2%*%t(xx)
+        GGG <- t(G_c)
+        ylars <- as.matrix(Y_c)
+        xlars <- cbind(W_c,t(GGG))
+        LAR <- lars(xlars,ylars,type="lar",use.Gram=F,max.steps=mrenv$lars)
+        res1<-cbind(res1,LAR$beta[nrow(LAR$beta),])
+        if(is.null(psmatrix)==FALSE){
+          rr <- as.matrix(res1[-c(1:(ncol(psmatrix)+1)),])
+        }else{
+          rr <- as.matrix(res1[-1,])
+        }
+        larsres<-rbind(larsres,rr)  
+      }
+      
+      countnum <- numeric()
+      for(ii in 1:nrow(larsres))
+      {
+        if ((abs(larsres[ii]))>0){countnum <- cbind(countnum,ii)}
+      }
+      if(length(countnum)==1){
+        xeb <- matrix(gene.data[countnum,],1,)
+        ebrow <-matrix(xeb[,1:2],,2)
+        xeb1<-matrix(xeb[,3:ncol(xeb)],1,)
+        xxeb <- as.matrix(t(xeb1))
+        nmak <- ncol(xxeb) 
+        
+      }else{
+        xeb <- as.matrix(gene.data[countnum,])
+        ebrow <-as.matrix(xeb[,1:2])
+        xeb1<-as.matrix(xeb[,3:ncol(xeb)])
+        xxeb <- as.matrix(t(xeb1))
+        nmak <- ncol(xxeb)
+      }
+      bayeslodres <- numeric()
+      
+      yeb <- as.matrix(Y.data)
+      
+      if(is.null(psmatrix)==FALSE){
+        u1<-ebayes_EM(cbind(matrix(1,nrow(xxeb),1),psmatrix),xxeb,yeb)
+        xb<-u1$u
+      }else{
+        u1<-ebayes_EM(matrix(1,nrow(xxeb),1),xxeb,yeb)
+        xb<-u1$u
+      }
+      xb<-as.matrix(xb)
+      if(is.null(psmatrix)==FALSE){
+        temp<-cbind(matrix(1,nrow(xxeb),1),psmatrix)
+      }else{
+        temp<-matrix(1,nrow(xxeb),1)
+      }
+      progress_bar$setFraction(95/100)
+      lodres<-likelihood(xb,cbind(temp,xxeb),yeb,nsam)
+      lodres<-as.matrix(lodres)
+      ##### compute heredity#######
+      ch_er <- as.numeric()
+      ch_x <- cbind(matrix(1,nrow(xxeb),1),xxeb)
+      if(is.null(psmatrix)==FALSE){
+        ch_bb <- rbind(mean(yeb),as.matrix(xb[(ncol(psmatrix)+2):nrow(xb),]))
+      }else{
+        ch_bb <- rbind(mean(yeb),as.matrix(xb[2:nrow(xb),]))
+      }
+      
+      for(i in 1:(ncol(ch_x)-1))
+      {
+        ch_xi <- ch_x[,(1+i)]
+        as1 <- length(which(ch_xi==1))/nrow(ch_x)
+        as2 <- 1-as1
+        ch_er <- rbind(ch_er,(1-(as1-as2)*(as1-as2))*ch_bb[i+1]*ch_bb[i+1])
+      }
+      ch_v0 <- (1/(nrow(ch_x)-1))*(t(yeb-ch_x%*%ch_bb)%*%(yeb-ch_x%*%ch_bb))
+      hered <- (ch_er/as.numeric(sum(ch_er)+ch_v0))*100
+      progress_bar$setFraction(98/100)
+      
+      if(is.null(psmatrix)==FALSE){
+        bayeslodres<-cbind(ebrow,xb[(ncol(psmatrix)+2):nrow(xb),],lodres[(ncol(psmatrix)+2):nrow(xb),],hered)
+      }else{
+        bayeslodres<-cbind(ebrow,xb[2:nrow(xb),],lodres[2:nrow(xb),],hered)
+        
+      }
+      
+      lodid<-which(bayeslodres[,4]>mrenv$lodvalue)
+      if(length(lodid)==0){
+        gmessage("No QTN were detected!",icon = "info",parent = window,title="Info")
+        progress_bar$setText ( "Stop Running!" )
+      }else{
+        if(length(lodid)==1){
+          lastres<-matrix(bayeslodres[lodid,],1,) 
+        }else{
+          lastres<-bayeslodres[lodid,]
+        }
+        if(length(lodid)==1){
+          lastres<-matrix(bayeslodres[lodid,],1,) 
+          xeb2<-matrix(xeb1[lodid,],1,)
+        }else{
+          lastres<-bayeslodres[lodid,]
+          xeb2<-as.matrix(xeb1[lodid,])
+        }
+        
+        xxmaf<- xeb2
+        leng.maf<-dim(xxmaf)[2]
+        maf.fun<-function(snp){
+          leng<-length(snp)
+          snp1<-length(which(snp==1))
+          snp11<-length(which(snp==-1))
+          snp0<-length(which(snp==0))
+          maf<-min(snp1,snp11)/leng
+          return(maf)
+        }
+        
+        maf<-apply(xxmaf,1,maf.fun)
+        maf<-as.matrix(round(maf,4))
+        vee<-round(u1$sigma2,4)
+        pee<-round(var(yeb),4)
+        
+        vees<-matrix("",nrow = nrow(lastres),1)
+        pees<-matrix("",nrow = nrow(lastres),1)
+        pees[1,1]<-pee
+        vees[1,1]<-vee
+        result<-lastres
+        mrenv$result<-result
+        temp<-as.matrix(result[,3:6])
+        temp[which(abs(temp)>=1e-4)]<-round(temp[abs(temp)>=1e-4],4)
+        temp[which(abs(temp)<1e-4)]<-as.numeric(sprintf("%.4e",temp[abs(temp)<1e-4]))
+        wan<-cbind(result[,1:2],temp)
+        
+        if(mrenv$inputform==1){
+          mrenv$genRaw<-as.data.frame(mrenv$genRaw)
+          genraw<-mrenv$genRaw[-1,1:4]
+          
+          wan_len<-dim(wan)[1]
+          marker<-character()
+          snp<-character()
+          
+          for(i in 1:wan_len){
+            chr_pos<-which(genraw[,2]==wan[i,1])
+            new_matrix<-genraw[chr_pos,]
+            posi_pos<-which(new_matrix[,3]==wan[i,2])
+            mark<-matrix(new_matrix[posi_pos,1],1,)
+            marker<-rbind(marker,mark)
+            sn<-matrix(new_matrix[posi_pos,4],1,)
+            snp<-rbind(snp,sn)
+          }
+        }
+        if(mrenv$inputform==2){
+          
+          mrenv$genRaw<-as.data.frame(mrenv$genRaw)
+          genraw<-mrenv$genRaw[-1,1:4]
+          
+          wan_len<-dim(wan)[1]
+          marker<-character()
+          snp<-character()
+          for(i in 1:wan_len){
+            chr_pos<-which(genraw[,2]==wan[i,1])
+            new_matrix<-genraw[chr_pos,]
+            posi_pos<-which(new_matrix[,3]==wan[i,2])
+            mark<-matrix(new_matrix[posi_pos,1],1,)
+            marker<-rbind(marker,mark)
+            sn<-matrix(new_matrix[posi_pos,4],1,)
+            snp<-rbind(snp,sn)
+          }
+          
+        }
+        if(mrenv$inputform==3){
+          mrenv$genRaw<-as.data.frame(mrenv$genRaw)
+          genraw<-mrenv$genRaw[-1,c(1,3,4,12)]
+          
+          wan_len<-dim(wan)[1]
+          marker<-character()
+          snp<-character()
+          for(i in 1:wan_len){
+            chr_pos<-which(genraw[,2]==wan[i,1])
+            new_matrix<-genraw[chr_pos,]
+            posi_pos<-which(new_matrix[,3]==wan[i,2])
+            mark<-matrix(new_matrix[posi_pos,1],1,)
+            marker<-rbind(marker,mark)
+            sn<-matrix(new_matrix[posi_pos,4],1,)
+            snp<-rbind(snp,sn)
+          }
+        }
+        mrenv$wan<-cbind(marker,wan,maf,snp,vees,pees)
+        
+        colnames(mrenv$wan)<-c("RS#","Chromosome","Marker Position (bp)","QTN effect","LOD score","P_value","r2 (%)","MAF","Genotype  for code 1","Var_Error","Var_phen (total)")
+        
+        
+        if(is.null(mrenv$wan)==TRUE)
+        {
+          gmessage("There is no result meets the requirements in the second step!","Info",icon="info")
+        }else{
+          tbdfe8<-gdfedit(mrenv$wan,container=nb1,expand=TRUE,label="Result")
+        }
+        progress_bar$setFraction(100/100)
+        progress_bar$setText("All done.")
+      }
+    }
+    
+  })
+  
+  addHandlerClicked(helpfile,handler=function(h,...){
+    RShowDoc("Instruction.pdf",package="mrMLM")   
+  })
+  
+  addHandlerClicked(savefile,handler=function(h,...){
+    
+    wan<-mrenv$wan
+    if(exists("wan")==FALSE||is.null(wan)==TRUE)
+    {
+      gmessage("There is no result meets the requirements in the second step!","Info",icon="info")
+      
+    }else{
+      output<-gfile(text="Save a file...",type="save",
+                    filter=list("All files"=list(patterns=c("*")),
+                                "CSV files"=list(patterns=c("*.csv"))))
+      write.table(wan,output,sep = ",",row.names=FALSE,col.names = TRUE) 
+    }
+  })
+  
+  
+  addHandlerClicked(plot,handler=function(h,...){
+    if(is.null(mrenv$gen)==TRUE){
+      gmessage("Please input correct genotype data !","Warning",icon="warning")
+      
+    }
+    if(is.null(mrenv$result)==TRUE){
+      gmessage("There is no result meets the requirements!","Info",icon="info")
+      
+    }
+    
+    if((is.null(mrenv$gen)==FALSE)&&(is.null(mrenv$result)==FALSE)){
+      
+      plotwin<-gwindow("Plot of LOD Score against Genome Position",visible=FALSE,width=960,height=250)
+      gpw<-ggroup(container=plotwin,horizontal = FALSE,spacing = 10)
+      ggpw<-ggraphics(container=gpw)
+      addSpring(gpw)
+      plotlyt<-glayout(container =gpw )
+      plotlabel<-glabel("Width (px):",container = plotlyt)
+      plotedit<-gedit("960",container = plotlyt)
+      widvalue<-svalue(plotedit)
+      plotlabel1<-glabel("Height (px):",container = plotlyt)
+      plotedit1<-gedit("240",container = plotlyt)
+      plotlabel2<-glabel("Word resolution (1/72 inch, ppi):",container = plotlyt)
+      plotedit2<-gedit("12",container = plotlyt)
+      plotlabel3 <- glabel("Figure resolution (ppi):",container = plotlyt)
+      plotedit3 <- gedit("72",container = plotlyt)
+      combo_box <- gcombobox(selected=3,c("blue","black","red","yellow","green","pink","purple","gray50","brown"),editable = TRUE,container = plotlyt)
+      plotlabel4 <- glabel("LOD line color:", container = plotlyt)
+      plotbt<-gbutton(" Save ",container =plotlyt )
+      plotlyt[1,2]<-plotlabel
+      plotlyt[1,3]<-plotedit
+      plotlyt[1,5]<-plotlabel1
+      plotlyt[1,6]<-plotedit1
+      plotlyt[1,8]<-plotlabel2
+      plotlyt[1,9]<-plotedit2
+      plotlyt[2,2]<-plotlabel3
+      plotlyt[2,3]<-plotedit3
+      plotlyt[2,5]<-plotlabel4
+      plotlyt[2,6]<-combo_box
+      
+      plotlyt[2,9]<-plotbt
+      
+      visible(plotwin) <- TRUE
+      
+      plotfu<-function(color1){
+        galaxyy<-as.matrix(mrenv$result)
+        chr_pos <- mrenv$gen[,1:2]
+        chr_num <- length(unique(chr_pos[,1]))
+        chr <- matrix(0,chr_num,1)
+        pos <- matrix(0,chr_num,1)
+        for(i in 1:chr_num)
+        {
+          
+          temp <- numeric()
+          temp <- length(which(chr_pos[,1]==i))
+          if(i==1)
+          {
+            pos[i] <- temp
+            chr[i] <- chr_pos[pos[i],2]
+          }else{
+            pos[i] <- pos[i-1] + temp
+            chr[i] <- chr_pos[pos[i],2]
+          }
+        }
+        
+        pos_acc <- matrix(0,chr_num,1)
+        for(i in 1:chr_num)
+        {
+          if(i==1){
+            pos_acc[i] <- chr[i]
+          }else{
+            pos_acc[i] <- pos_acc[i-1] + chr[i]
+          }
+        }
+        
+        newres_pos <- galaxyy[,2]
+        res_sumpos <- pos_acc[galaxyy[which(galaxyy[,1]>1),1]-1] + galaxyy[which(galaxyy[,1]>1),2] 
+        newres_pos[which(galaxyy[,1]>1)] <- res_sumpos 
+        pospic<-c(newres_pos)
+        lodpic<-c(galaxyy[,4])  
+        mm<-round(max(pospic)/3000)
+        mm<-as.numeric(format(mm,digits = 1,scientific = TRUE))
+        pospicx<-pospic/mm
+        if(pospicx[1]<20){
+          pospicx[1]<-pospicx[1]+20
+        }
+        pos_acc1<-pos_acc/mm
+        resdf1 <- data.frame(pospicx,lodpic)
+        
+        mrenv$pp <- ggplot(data=resdf1, aes(x=pospicx, y=lodpic)) +
+          geom_bar(stat="identity", width=0.5, fill="white", linetype="solid",color=color1)
+        
+        mrenv$pp <- mrenv$pp + geom_vline(xintercept=c(0,pos_acc1),linetype="dashed",alpha=0.2)
+        mrenv$pp <- mrenv$pp  + scale_x_continuous(expand=c(0,0),limits=c(0,(pos_acc1[dim(pos_acc1)[1]]+100))) +
+          scale_y_continuous(expand=c(0,0))
+        mrenv$pp <- mrenv$pp + xlab(paste("Genome position (",mm,"bp)",sep = "")) + ylab("LOD score") + ggtitle("") + theme_classic()
+        mrenv$pp <- mrenv$pp + theme(axis.title.y = element_text( vjust = 2,hjust=0.5,size = 14),
+                                     axis.title.x = element_text(vjust = -0.5,hjust=0.5,size = 14))
+        
+        mrenv$pp <- mrenv$pp + theme(panel.background = element_rect(fill = "white"))
+        mrenv$pp <- mrenv$pp + theme(text=element_text(family="mono"))
+        mrenv$pp <- mrenv$pp + theme(axis.line.y = element_line(colour = "black", linetype = "solid"),
+                                     axis.line.x = element_line(colour = "black", linetype = "solid"))
+        print(mrenv$pp)
+      }
+      addHandlerChanged(ggpw, handler=function(h,...) {
+        widqqvalue <- as.numeric(svalue(plotedit))
+        heightqqvalue <- as.numeric(svalue(plotedit1))
+        pointsizeqqvalue <- as.numeric(svalue(plotedit2))
+        resppi <- as.numeric(svalue(plotedit3))
+        color1<-svalue(combo_box)
+        
+        plotfu(color1)
+        
+      })
+      
+      addhandlerclicked(plotbt,handler = function(h,...){
+        widqqvalue <- as.numeric(svalue(plotedit))
+        heightqqvalue <- as.numeric(svalue(plotedit1))
+        pointsizeqqvalue <- as.numeric(svalue(plotedit2))
+        resppi <- as.numeric(svalue(plotedit3))
+        if(is.null(mrenv$pp)==TRUE)
+        {
+          gmessage("There is no result meets the requirements!","Info",icon="info")
+        }else{
+          output <- gfile(text = "Save a file...", type = "save", 
+                          filter = list(`All files` = list(patterns = c("*")), 
+                                        `TIFF files` = list(patterns = c("*.tiff")),
+                                        `PNG files` = list(patterns = c("*.png")),
+                                        `JPEG files` = list(patterns = c("*.jpeg"))))
+          if((length(grep(".png",output))==1)||(length(grep(".PNG",output))==1)){
+            png(output, width=widqqvalue, height=heightqqvalue, units= "px", pointsize = pointsizeqqvalue,res=resppi)
+          }else if((length(grep(".tiff",output))==1)||(length(grep(".TIFF",output))==1)){
+            tiff(output, width=widqqvalue, height=heightqqvalue, units= "px", pointsize = pointsizeqqvalue,res=resppi)
+          }else if((length(grep(".jpeg",output)==1))||(length(grep(".JPEG",output))==1)){
+            jpeg(output, width=widqqvalue, height=heightqqvalue, units= "px", pointsize = pointsizeqqvalue,res=resppi)  
+          }else{
+            gmessage("Please input correct image format!")
+          }
+          
+          color1<-svalue(combo_box)
+          
+          plotfu(color1)
+          dev.off()
+        }
+      })
+    }
+  })
+}
+addhandlerclicked(pLARmEBbutton,handler = function(h,...){
+  pLARmEBsub()
+})
 }
