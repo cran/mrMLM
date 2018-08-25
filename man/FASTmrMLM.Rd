@@ -21,6 +21,18 @@ FASTmrMLM(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svrad,svmlod,Genformat,CLO)
 	}
 \author{
 Zhang Ya-Wen, Li Pei, Ren Wen-Long, Ni Yuan-Li, Zhang Yuan-Ming\cr
-Maintainer: Yuanming Zhang<soyzhang@mail.hzau.edu.cn>
+Maintainer: Yuan-Ming Zhang<soyzhang@mail.hzau.edu.cn>
 }
+\examples{
+G1=data(Gen)
+P1=data(Phe)
+Readraw=ReadData(fileGen=Gen,filePhe=Phe,fileKin=NULL,filePS =NULL,
+Genformat=1)
+InputData=inputData(readraw=Readraw,Genformat=1,method="FASTmrMLM",trait=1)
+result=FASTmrMLM(InputData$doMR$gen,InputData$doMR$phe,
+InputData$doMR$outATCG,InputData$doMR$genRaw,
+InputData$doMR$kk,InputData$doMR$psmatrix,0.01,svrad=20,
+svmlod=3,Genformat=1,CLO=1)   
+}
+
 

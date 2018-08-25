@@ -2,16 +2,16 @@ Package: mrMLM
 Type: Package
 Title: Multi-Locus Random-SNP-Effect Mixed Linear Model Tools for
         Genome-Wide Association Study
-Version: 3.0
-Date: 2018-3-10
+Version: 3.1
+Date: 2018-8-25
 Author: Zhang Ya-Wen, Li Pei, Ren Wen-Long, Ni Yuan-Li, and Zhang Yuan-Ming 
 Maintainer: Yuanming Zhang<soyzhang@mail.hzau.edu.cn>
-Description: Conduct multi-locus genome-wide association study under the framework of random-SNP-effect mixed linear model (mrMLM). First, each marker on the genome is scanned. Bonferroni correction is replaced by a less stringent selection criterion for significant test. Then, all the markers that are potentially associated with the trait are included in a multi-locus model, their effects are estimated by empirical Bayes and true QTN are identified by likelihood ratio test.
+Description: Conduct multi-locus genome-wide association study under the framework of random-SNP-effect mixed linear model (mrMLM). First, each marker on the genome is scanned. Bonferroni correction is replaced by a less stringent selection criterion for significant test. Then, all the markers that are potentially associated with the trait are included in a multi-locus model, their effects are estimated by empirical Bayes and true QTN are identified by likelihood ratio test. Wen YJ, Zhang H, Ni YL, Huang B, Zhang J, Feng JY, Wang SB, Dunwell JM, Zhang YM, Wu R (2018) <doi:10.1093/bib/bbw145>.
 Depends: MASS,data.table,doParallel,foreach
 Imports:
-        methods,openxlsx,stringr,qqman,ggplot2,lars,ncvreg,coin,sampling
+        methods,openxlsx,stringr,qqman,ggplot2,lars,ncvreg,coin,sampling,bigmemory
 License: GPL (>= 2)
 NeedsCompilation: no
-Packaged: 2018-03-11 16:08:32 UTC; abc
+Packaged: 2018-08-25 08:08:42 UTC; Administrator
 Repository: CRAN
-Date/Publication: 2018-03-12 04:09:16 UTC
+Date/Publication: 2018-08-25 22:10:03 UTC

@@ -21,7 +21,18 @@ FASTmrEMMA(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,Likelihood,
 }
 \author{
 Zhang Ya-Wen, Li Pei, Ren Wen-Long, Ni Yuan-Li, Zhang Yuan-Ming\cr
-Maintainer: Yuanming Zhang<soyzhang@mail.hzau.edu.cn>
+Maintainer: Yuan-Ming Zhang<soyzhang@mail.hzau.edu.cn>
+}
+\examples{
+G1=data(Gen)
+P1=data(Phe)
+Readraw=ReadData(fileGen=Gen,filePhe=Phe,fileKin=NULL,filePS =NULL,
+Genformat=1)
+InputData=inputData(readraw=Readraw,Genformat=1,method="FASTmrEMMA",trait=1)
+result=FASTmrEMMA(InputData$doFME$gen,InputData$doFME$phe,
+InputData$doFME$outATCG,InputData$doFME$genRaw,
+InputData$doFME$kk,InputData$doFME$psmatrix,0.005,
+svmlod=3,Genformat=1,Likelihood="REML",CLO=1)   
 }
 
 

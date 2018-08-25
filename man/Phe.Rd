@@ -17,5 +17,5 @@
  Dataset input of phenotype in mrMLM function.
 }
 \author{
- Maintainer: Yuanming Zhang<soyzhang@mail.hzau.edu.cn>
+ Maintainer: Yuan-Ming Zhang<soyzhang@mail.hzau.edu.cn>
 }
