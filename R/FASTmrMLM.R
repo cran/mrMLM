@@ -1,10 +1,5 @@
 FASTmrMLM<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svrad,svmlod,Genformat,CLO){
 
-if(is.null(CLO)==FALSE){
-  OUT<-list(gen=gen,phe=phe)  
-  return(OUT)  
-}else{
-
 inputform<-Genformat
 svlod<-svmlod
 
@@ -14,19 +9,17 @@ if(is.null(kk)){
   {
     warning("Please input correct genotype dataset !")
   }else{
-    XX1<-t(gen[,])
+    XX1<-t(gen)
     x<-XX1[3:nrow(XX1),]
     rownames(x)<-NULL
     colnames(x)<-NULL
-    
-    X1<-big.matrix(nrow(x),ncol(x),type='double',shared = FALSE)
-    X1[,]<-x[,]
+    X1<-as.matrix(x)
     rm(x,XX1)
     gc()
     n<-nrow(X1)
     m<-ncol(X1)
     ########kinship##########
-    kk1<-(X1[,]%*%t(X1[,]))/m
+    kk1<-(X1%*%t(X1))/m
     kk<-as.matrix(kk1) 
   }
   rm(kk1,X1)
@@ -49,7 +42,7 @@ if((svpal<0)||(svpal>1))
 }
 if(svrad<0)
 {
-  warning("Please input search radius of candidate gene: > 0 !")
+  warning("Please input search radius (kb) of candidate gene: > 0 !")
 }
 if(svlod<0)
 {
@@ -169,7 +162,7 @@ ebayes_EM<-function(x,z,y)
     stderr<-sqrt(s[i]+1e-20)
     t<-abs(u[i])/stderr
     f<-t*t
-    p<-1-pchisq(f,1)
+    p<-pchisq(f,1,lower.tail = F)
     wang[i]<-p
   }
   
@@ -304,22 +297,19 @@ fixed2<-function(lambdak){
   var<-abs((lambdak*diag(1)-lambdak*zHz*lambdak)*as.numeric(sigma2))
   wald<-gamma^2/var
   stderr<-sqrt(diag(var))
-  p_value<-1-pchisq(wald,1) 
+  p_value<-pchisq(wald,1,lower.tail = F) 
   result<-list(gamma,stderr,beta,sigma2,p_value,wald)
   return(result)
 }
 
 y<-as.matrix(phe)
-XX1q<-t(gen[,])
-XX1<-big.matrix(nrow(XX1q),ncol(XX1q),type='double',shared = FALSE)
-XX1[,]<-XX1q[,]
-rm(XX1q)
-gc()
+XX1<-t(gen)
+
 x<-XX1[3:nrow(XX1),]
 rownames(x)<-NULL
 colnames(x)<-NULL
-X1<-big.matrix(nrow(x),ncol(x),type='double',shared = FALSE)
-X1[,]<-x[,]
+
+X1<-as.matrix(x)
 rm(x)
 gc()
 n<-nrow(X1)
@@ -342,7 +332,7 @@ uu<-qq[[2]]
 q<-ncol(xxx)
 waving<-svrad
 xu<-t(uu)%*%xxx
-zkk<-t(uu)%*%X1[,]
+zkk<-t(uu)%*%X1
 theta1<-0
 theta<-0 
 
@@ -380,12 +370,11 @@ if((cl.cores<=2)||(is.null(CLO)==FALSE)){
   cl.cores<-1
 }else if(cl.cores>2){
   if(cl.cores>10){
-    cl.cores<-10 
+    cl.cores<-10
   }else {  
     cl.cores <- detectCores()-1
   }
 }   
-
 cl <- makeCluster(cl.cores)
 registerDoParallel(cl)  
 mat=foreach(j=1:m, .multicombine=TRUE, .combine = 'rbind')%dopar%
@@ -415,7 +404,7 @@ mat=foreach(j=1:m, .multicombine=TRUE, .combine = 'rbind')%dopar%
   wald<-parmfix[[6]]
   fn0<-lll(c(-Inf))
   lrt<-2*abs(fn0-fn1)
-  p_lrt<-1-pchisq(lrt,1)
+  p_lrt<-pchisq(lrt,1,lower.tail = F)
   parm0<-c(j,beta,sigma2,sigma2g,gamma,stderr,wald,p_wald)
 }
 stopCluster(cl)
@@ -447,7 +436,7 @@ if(inputform==1){
   tempparms[which(abs(tempparms)>=1e-4)]<-round(tempparms[which(abs(tempparms)>=1e-4)],4)
   tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
   parmsShow<-cbind(genRaw[-1,1],parms[,1:2],tempparms,genRaw[-1,4])
-  colnames(parmsShow)<-c("RS#","Chromosome","Marker Position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","-log10(P)","Genotype for code 1")
+  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","'-log10(P)'","Genotype for code 1")
   
 }
 if(inputform==2){
@@ -459,7 +448,7 @@ if(inputform==2){
   tempparms[which(abs(tempparms)>=1e-4)]<-round(tempparms[which(abs(tempparms)>=1e-4)],4)
   tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
   parmsShow<-cbind(genRaw[-1,1],parms[,1:2],tempparms,outATCG)
-  colnames(parmsShow)<-c("RS#","Chromosome","Marker Position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","-log10(P)","Genotype  for code 1")
+  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","'-log10(P)'","Genotype for code 1")
   
 }
 if(inputform==3){
@@ -473,7 +462,7 @@ if(inputform==3){
   tempparms[which(abs(tempparms)>=1e-4)]<-round(tempparms[which(abs(tempparms)>=1e-4)],4)
   tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
   parmsShow<-cbind(genRaw[-1,1],parms[,1:2],tempparms,outATCG)
-  colnames(parmsShow)<-c("RS#","Chromosome","Marker Position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","-log10(P)","Genotype  for code 1")
+  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","'-log10(P)'","Genotype for code 1")
   
 }
 
@@ -493,14 +482,14 @@ parms<-parms[,-(2:8)]
 mannewp <- as.matrix(0.05/as.numeric(nrow(gen)))
 rowbl<-matrix("",(nrow(parms)-1),1)
 mannepr<-rbind(mannewp,rowbl)
-colnames(mannepr)<-"Manhattan p-value"
+colnames(mannepr)<-"Manhattan P-value"
 
 parmsm<-cbind(as.matrix(parms),mannepr)
 parmsm<-as.data.frame(parmsm,stringsAsFactors=FALSE)
 
 parmsm[,c(1,2,4)]<-sapply(parmsm[,c(1,2,4)],as.numeric)
 parms.pchange<-as.data.frame(parms.pchange[,-(1:8)])
-colnames(parms.pchange)<-"p-value"
+colnames(parms.pchange)<-"P-value"
 
 p<-as.vector(parms1[,8])
 ans<-p.adjust(p, method = "bonferroni", n = length(p))
@@ -753,14 +742,14 @@ if(le1!=0){
         
         tempwan <- wan
         lodscore1 <- as.numeric(tempwan[,5])
-        log10P <- as.matrix(round(-log10(1-pchisq(lodscore1*4.605,1)),4))
+        log10P <- as.matrix(round(-log10(pchisq(lodscore1*4.605,1,lower.tail = F)),4))
         if(nrow(tempwan)>1){
           tempwan1 <- cbind(tempwan[,1:5],log10P,tempwan[,6:10]) 
         }else{
           tempwan1 <- cbind(t(as.matrix(tempwan[,1:5])),log10P,t(as.matrix(tempwan[,6:10])))  
         }
         wan <- tempwan1
-        colnames(wan)<-c("RS#","Chromosome","Marker Position (bp)","QTN effect","LOD score","-log10(P)","r2 (%)","MAF","Genotype  for code 1","Var_Error","Var_phen (total)")
+        colnames(wan)<-c("RS#","Chromosome","Marker position (bp)","QTN effect","LOD score","'-log10(P)'","r2 (%)","MAF","Genotype for code 1","Var_error","Var_phen (total)")
         wan<-as.data.frame(wan)
       }
     }
@@ -769,7 +758,6 @@ if(le1!=0){
 parmsShow<-parmsShow[,-c(4,5,6,8,9)]
 output<-list(result1=parmsShow,result2=wan,Manhattan=parmsm,QQ=parms.pchange)
 return(output) 
-}
 }
 }
 

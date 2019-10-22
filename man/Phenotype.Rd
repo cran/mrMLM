@@ -1,17 +1,16 @@
-\name{Phe}
-\alias{Phe}
-\alias{<phenotype>}
-\alias{rep-1}
-\alias{rep-2}
-\alias{rep-3}
+\name{Phenotype}
+\alias{Phenotype}
+\alias{trait1}
+\alias{trait2}
+\alias{trait3}
 \title{
- Phenotype dataset    
+ Phenotype of real data   
 }
 \description{
  Phenotype dataset of multiple traits. 
 }
 \usage{
-  data(Phe)
+  data(Phenotype)
 }
 \details{
  Dataset input of phenotype in mrMLM function.

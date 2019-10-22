@@ -1,10 +1,4 @@
 ISIS<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
-
-if(is.null(CLO)==FALSE){
- OUT<-list(gen=gen,phe=phe)
- return(OUT)
-}else{
-
 pvalue<-svpal
 svlod<-svmlod
 inputform<-Genformat
@@ -141,7 +135,7 @@ ebayes_EM<-function(x,z,y)
     stderr<-sqrt(s[i]+1e-20)
     t<-abs(u[i])/stderr
     f<-t*t
-    p<-1-pchisq(f,1)
+    p<-pchisq(f,1,lower.tail = F)
     wang[i]<-p
   }
   
@@ -191,16 +185,12 @@ likelihood<-function(xxn,xxx,yn,bbo)
   return (lod)
 }
 
-X<-t(gen[,])
+X<-t(gen)
 set.seed(1)
-X1q<-X[3:nrow(X),]
-X1<-big.matrix(nrow(X1q),ncol(X1q),type='double',shared = FALSE)
-X1<-X1q[,]
-rm(X1q)
-gc()
+X1<-X[3:nrow(X),]
 
 sig<-seq(1:ncol(X1))
-x<-data.frame(X1[,])
+x<-data.frame(X1)
 y<-as.matrix(y)
 le<-length(sig)
 xnew<-x[sig]
@@ -234,15 +224,13 @@ if((cl.cores<=2)||(is.null(CLO)==FALSE)){
   cl.cores<-1
 }else if(cl.cores>2){
   if(cl.cores>10){
-    cl.cores<-10 
+    cl.cores<-10
   }else {  
     cl.cores <- detectCores()-1
   }
 }   
-
 cl <- makeCluster(cl.cores)
 registerDoParallel(cl)
-
 
 mm=foreach(i=1:le, .multicombine=TRUE, .combine = 'rbind')%dopar%
 {
@@ -532,7 +520,7 @@ if(le1!=0){
           wan<-cbind(marker,wan,maf,snp,vees,pees)
           tempwan <- wan
           lodscore1 <- as.numeric(tempwan[,5])
-          log10P <- as.matrix(round(-log10(1-pchisq(lodscore1*4.605,1)),4))
+          log10P <- as.matrix(round(-log10(pchisq(lodscore1*4.605,1,lower.tail = F)),4))
           
           if(nrow(tempwan)>1){
             tempwan1 <- cbind(tempwan[,1:5],log10P,tempwan[,6:10])
@@ -542,30 +530,29 @@ if(le1!=0){
           
           wan <- tempwan1
           
-          colnames(wan)<-c("RS#","Chromosome","Marker Position (bp)","QTN effect","LOD score","-log10(P)","r2 (%)","MAF","Genotype  for code 1","Var_Error","Var_phen (total)")
+          colnames(wan)<-c("RS#","Chromosome","Marker position (bp)","QTN effect","LOD score","'-log10(P)'","r2 (%)","MAF","Genotype for code 1","Var_error","Var_phen (total)")
         }
       }
     }
   }  
 }
 
-if(nrow(result)>1){
+if(is.null(result)==FALSE){
+ if(nrow(result)>1){
   r1<-as.matrix(result[,c(1,2,4)]) 
-}else{
+ }else{
   r1<-t(as.matrix(result[,c(1,2,4)]))  
+ }
+ r2<-as.matrix(gen[,1:2])
+ rowbl<-nrow(r2)-nrow(r1)
+ bl<-matrix("",rowbl,3)
+ r12<-rbind(r1,bl)
+ result<-cbind(r2,r12)
+ colnames(result)<-c("Chromosome","Marker position (bp)","Chromosome (detected)","Marker position (bp) (detected)","LOD score (detected)")
 }
-r2<-as.matrix(gen[,1:2])
-
-rowbl<-nrow(r2)-nrow(r1)
-bl<-matrix("",rowbl,3)
-r12<-rbind(r1,bl)
-result<-cbind(r2,r12)
-
-colnames(result)<-c("Chromosome","Marker Position (bp)","Chromosome(detected)","Marker Position (bp)(detected)","LOD score(detected)")
 
 output<-list(result=wan,plot=result)
-
+}
 return(output)
-}
-}
+#}
 }
