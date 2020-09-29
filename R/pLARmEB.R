@@ -851,14 +851,14 @@ pLARmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,CriLOD,lars1,Genformat,Boot
         xxot <- as.matrix(gene.data[gene.data[,1]==i,3:ncol(gene.data)])
         xot <-t(xxot)
         nmarkot <-ncol(xot)
-        kk[[i]]<-matrix(0,nsam,nsam)
-        for(k in 1:nmarkot)
-        {
-          z<-as.matrix(xot[,k])
-          kk[[i]]<-kk[[i]]+z%*%t(z)
-        }
+        # kk[[i]]<-matrix(0,nsam,nsam)
+        # for(k in 1:nmarkot)
+        # {
+        #   z<-as.matrix(xot[,k])
+        #   kk[[i]]<-kk[[i]]+z%*%t(z)
+        # }
+        kk[[i]]<-mrMLM::multiplication_speed(xot,t(xot))
         cc[[i]]<-mean(diag(kk[[i]]))
-        
         kktotal<-kktotal+kk[[i]]
       }
       
@@ -1240,21 +1240,8 @@ pLARmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,CriLOD,lars1,Genformat,Boot
         wan <- tempwan1
         colnames(wan)<-c("RS#","Chromosome","Marker position (bp)","QTN effect","LOD score","'-log10(P)'","r2 (%)","MAF","Genotype for code 1","Var_error","Var_phen (total)")
         wan<-as.data.frame(wan)
-        
-        result<-as.data.frame(result)
       }
-      
-      if(is.null(result)==FALSE){
-        
-        r1<-as.matrix(result[,c(1,2,4)]) 
-        r2<-as.matrix(genname[,1:2])
-        rowbl<-nrow(r2)-nrow(r1)
-        bl<-matrix("",rowbl,3)
-        r12<-rbind(r1,bl)
-        result<-cbind(r2,r12)
-        colnames(result)<-c("Chromosome","Marker position (bp)","Chromosome (detected)","Marker position (bp) (detected)","LOD score (detected)")
-      }
-      output<-list(result=wan,plot=result)
+      output<-list(result=wan)
     } 
     return(output) 
   }

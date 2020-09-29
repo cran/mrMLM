@@ -536,22 +536,7 @@ if(le1!=0){
     }
   }  
 }
-
-if(is.null(result)==FALSE){
- if(nrow(result)>1){
-  r1<-as.matrix(result[,c(1,2,4)]) 
- }else{
-  r1<-t(as.matrix(result[,c(1,2,4)]))  
- }
- r2<-as.matrix(gen[,1:2])
- rowbl<-nrow(r2)-nrow(r1)
- bl<-matrix("",rowbl,3)
- r12<-rbind(r1,bl)
- result<-cbind(r2,r12)
- colnames(result)<-c("Chromosome","Marker position (bp)","Chromosome (detected)","Marker position (bp) (detected)","LOD score (detected)")
-}
-
-output<-list(result=wan,plot=result)
+output<-list(result=wan)
 }
 return(output)
 #}

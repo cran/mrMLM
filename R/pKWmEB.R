@@ -1,6 +1,7 @@
 pKWmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
   
     inputform<-Genformat
+    pheRAW<-phe
     
     if(is.null(kk)){
       if(is.null(gen)==TRUE)
@@ -11,11 +12,12 @@ pKWmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
         envgen<-t(envgen)
         m<-ncol(envgen)
         n<-nrow(envgen)
-        kk1<-matrix(0,n,n)
-        for(k in 1:m){
-          z<-as.matrix(envgen[,k])
-          kk1<-kk1+z%*%t(z)
-        }
+        #kk1<-matrix(0,n,n)
+        # for(k in 1:m){
+        #   z<-as.matrix(envgen[,k])
+        #   kk1<-kk1+z%*%t(z)
+        # }
+        kk1<-mrMLM::multiplication_speed(envgen,t(envgen))
         cc<-mean(diag(kk1))
         kk1<-kk1/cc
         kk<-as.matrix(kk1)
@@ -946,7 +948,7 @@ pKWmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
         tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
         kong<-matrix("",nrow(tempparms),1)
         parmsShow<-data.frame(genRaw[-1,1],gen[,1:2],kong,tempparms,genRaw[-1,4])
-        colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","SNP effect","'-log10(P)'","Genotype for code 1")
+        colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","SNP effect (pKWmEB)","'-log10(P) (pKWmEB)'","Genotype for code 1")
         
       }
       if(inputform==2){
@@ -958,7 +960,7 @@ pKWmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
         tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
         kong<-matrix("",nrow(tempparms),1)
         parmsShow<-data.frame(genRaw[-1,1],gen[,1:2],kong,tempparms,outATCG)
-        colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","SNP effect","'-log10(P)'","Genotype for code 1")
+        colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","SNP effect (pKWmEB)","'-log10(P) (pKWmEB)'","Genotype for code 1")
         
       }
       if(inputform==3){
@@ -972,45 +974,8 @@ pKWmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
         tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
         kong<-matrix("",nrow(tempparms),1)
         parmsShow<-data.frame(genRaw[-1,1],gen[,1:2],kong,tempparms,outATCG)
-        colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","SNP effect","'-log10(P)'","Genotype for code 1")
+        colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","SNP effect (pKWmEB)","'-log10(P) (pKWmEB)'","Genotype for code 1")
       }
-      
-      parms.pchange<-as.matrix(pvaluetotal[,2])
-      parmsp<-parms.pchange
-      locsub<-which(parmsp==0)
-      if(length(locsub)!=0){
-        pmin<-min(parmsp[parmsp!=0])
-        subvalue<-10^(1.1*log10(pmin))
-        parms.pchange[locsub]<-subvalue
-      }else{
-        parms.pchange<-parmsp
-      }
-      colnames(parms.pchange)<-"P-value"
-      
-      bpnumber <- numeric()
-      chrnum <- unique(gen[,1])
-      for(i in 1:length(chrnum))
-      {
-        bpnumber <- rbind(bpnumber,as.matrix(c(1:length(which(gen[,1]==chrnum[i])))))
-      }
-      rowsnp <- dim(gen)[1]
-      snpname <- numeric()
-      snpname <- as.matrix(paste("rs",c(1:rowsnp),sep=""))
-      parmstemp <- parmsShow[,-4]
-      parmstemp[,4] <-parms.pchange
-      parms <- data.frame(parmstemp,snpname,bpnumber)
-      colnames(parms)<-c("RS#","Chromosome","Marker position (bp)","P-value","Genotype for code 1","SNPname","BPnumber")
-      parms<-parms[,-c(1,3,5)]
-      
-      mannewp <- as.matrix(0.05/as.numeric(nrow(gen)))
-      rowbl<-matrix("",(nrow(parms)-1),1)
-      mannepr<-rbind(mannewp,rowbl)
-      
-      colnames(mannepr)<-"Manhattan P-value"
-      
-      parmsm<-cbind(as.matrix(parms),mannepr)
-      parmsm<-as.data.frame(parmsm,stringsAsFactors=FALSE)
-      parmsm[,c(1,2,4)]<-sapply(parmsm[,c(1,2,4)],as.numeric)
       
       finalres <- gglartotal
       
@@ -1145,7 +1110,7 @@ pKWmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
         needgenofor <- as.matrix(needgenofor[finalres[,2]])
       }
       
-      phevartotal<-var(Y.data)
+      phevartotal<-var(pheRAW)
       if(finalres[1,7]>=1e-4){finalres[1,7]<-round(finalres[1,7],4)}
       if(finalres[1,7]<1e-4){finalres[1,7]<-as.numeric(sprintf("%.4e",finalres[1,7]))}
       if(phevartotal>=1e-4){phevartotal<-round(phevartotal,4)}
@@ -1170,7 +1135,7 @@ pKWmEB<-function(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svmlod,Genformat,CLO){
       colnames(wan)<-c("RS#","Chromosome","Marker position (bp)","QTN effect","LOD score","'-log10(P)'","r2 (%)","MAF","Genotype for code 1","Var_error","Var_phen(total)")
       wan<-as.data.frame(wan)
       }#change20190125
-      output<-list(result1=parmsShow,result2=wan,Manhattan=parmsm,QQ=parms.pchange)
+      output<-list(result1=parmsShow,result2=wan)
       return(output)
     } 
    }

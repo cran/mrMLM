@@ -1,136 +1,244 @@
 mrMLM<-function(fileGen=NULL,filePhe=NULL,fileKin=NULL,filePS=NULL,PopStrType=NULL,fileCov=NULL,Genformat=NULL,method=NULL,
                 Likelihood="REML",trait=NULL,SearchRadius=20,CriLOD=NULL,SelectVariable=50,
-                Bootstrap=FALSE,DrawPlot=FALSE,Plotformat=NULL,Resolution=NULL,dir=NULL){
+                Bootstrap=FALSE,DrawPlot=TRUE,Plotformat="tiff",dir=NULL){
+
 
 if(DrawPlot==TRUE){
-  Plot<-function(plotresult=NULL,color1=NULL,color2=NULL,p_stand=NULL,method=NULL,type=NULL){
-    Manhattan<-function(plotresult,color1,color2){
-      parms<-as.data.frame(plotresult)
-      mannewp<-as.numeric(parms[1,5])
-      svgwline<-round(-log10(mannewp),4)
-      standline<-svgwline
-      manhattan(parms,chr = "Chromosome",bp ="BPnumber",p ="P-value",snp="SNPname",col=c(color1,color2),suggestiveline=FALSE,genomewideline = standline)
+  
+  manhattan_mrMLM<-function(data_in,data_fin,mar=c(2.9,2.8,0.7,2.8),VerLabDis=1.5,HorLabDis=1.5,
+                            HorTckDis=0.2,VerTckDis=0.4,label_size=0.8,CoorLwd=5,
+                            TckLen=-0.03,TckLwd=0.7,log_times=2,LOD_times=1.2,lodline){
+    
+    ###########Data process#################
+    ###########intermediate result
+    method<-unique(data_in[,3])
+    data_method<-list(NULL)
+    for(i in 1:length(method)){
+      data_method[[i]]<-data_in[which(data_in[,3]==method[i]),]
+    }
+    logp_4method<-numeric()
+    for(i in 1:length(method)){
+      method_p<-data_method[[i]][,8]
+      logp_4method<-cbind(logp_4method,method_p) 
+    }
+    logp_4method<-apply(logp_4method,2,as.numeric)
+    p_4method<-10^-logp_4method
+    p_median<-apply(p_4method,1,median)
+    locsub<-which(p_median==0)
+    pmin<-min(p_median[p_median!=0])
+    subvalue<-10^(1.1*log10(pmin))
+    p_median[locsub]<-subvalue
+    data_p<-as.matrix(p_median)
+    data_num<-as.matrix(seq(1:length(p_median)))
+    data_chr<-as.matrix(data_method[[1]][,5])
+    data_pos<-as.matrix(data_method[[1]][,6])
+    manresult<-cbind(data_chr,data_pos,data_p,data_num)
+    manresult<-apply(manresult,2,as.numeric)
+    colnames(manresult)<-c("Chromosome","BPnumber","P-value","SNPname")
+    manresult<-as.data.frame(manresult)
+    #######final result##################
+    data_fin_method<-unique(data_fin[,3])
+    data_fin_method_length<-1:length(unique(data_fin[,3]))
+    for(r in 1:length(unique(data_fin[,3]))){
+      data_fin[which(data_fin[,3]==data_fin_method[r]),3]<-r
+    }
+    data_fin_mark<-matrix(data_fin[,c(5,6,8,3)],,4)
+    data_fin_mark<-matrix(apply(data_fin_mark,2,as.numeric),,4)
+    data_fin_mark_chr<-matrix(data_fin_mark[order(data_fin_mark[,1]),],,4)
+    data_fin_mark_order<-numeric()
+    for(i in c(unique(data_fin_mark_chr[,1]))){
+      data_fin_mark_erery_chr<-matrix(data_fin_mark_chr[which(data_fin_mark_chr[,1]==i),],,4)
+      data_fin_mark_pos<-matrix(data_fin_mark_erery_chr[order(data_fin_mark_erery_chr[,2]),],,4)
+      all_pos<-unique(data_fin_mark_pos[,2])
+      all_pos_maxlod<-numeric()
+      for(ii in 1:length(all_pos)){
+        all_pos_every<-matrix(data_fin_mark_pos[which(data_fin_mark_pos[,2]==all_pos[ii]),],,4)
+        lod_me<-median(all_pos_every[,3])
+        all_pos_every_median<-c(all_pos_every[1,1:2],lod_me,all_pos_every[1,4])
+        if(nrow(all_pos_every)>=2){
+          all_pos_every_median<-c(all_pos_every[1,1:2],lod_me,max(data_fin_mark[,4])+1)
+        }
+        all_pos_maxlod<-rbind(all_pos_maxlod,all_pos_every_median)
+      }
+      data_fin_mark_order<-rbind(data_fin_mark_order,all_pos_maxlod)
+    }
+    snpOfInterest<-numeric()
+    for(i in c(unique(data_fin_mark_order[,1]))){
+      manresult_chr<-manresult[which(manresult[,1]==i),]
+      data_fin_mark_order_chr<-matrix(data_fin_mark_order[which(data_fin_mark_order[,1]==i),],,4)
+      mark_loc<-manresult_chr[which(manresult_chr[,2]%in%data_fin_mark_order_chr[,2]),4]
+      snpOfInterest<-c(snpOfInterest,mark_loc) 
+    }
+    bpnumber <- numeric()
+    chrnum <- unique(manresult[,1])
+    for(i in 1:length(chrnum))
+    {
+      bpnumber <- rbind(bpnumber,as.matrix(c(1:length(which(manresult[,1]==chrnum[i])))))
+    }
+    manresult2<-cbind(manresult[,1],bpnumber,manresult[,3:4])
+    colnames(manresult2)<-c("Chromosome","BPnumber","P-value","SNPname")
+    ##########prepare for data#############################
+    x<-manresult2;col=c("lightgreen","lightskyblue");logp=TRUE
+    chr = "Chromosome";bp ="BPnumber";p ="P-value";snp="SNPname";
+    highlight<-snpOfInterest
+    CHR=BP=P=index=NULL
+    d=data.frame(CHR=x[[chr]], BP=x[[bp]], P=x[[p]])
+    if (!is.null(x[[snp]])) d=transform(d, SNP=x[[snp]])
+    d <- subset(d, (is.numeric(CHR) & is.numeric(BP) & is.numeric(P)))
+    d <- d[order(d$CHR, d$BP), ]
+    if (logp) {
+      d$logp <- -log10(d$P)
+    } else {
+      d$logp <- d$P
+    }
+    d$pos=NA
+    d$index=NA
+    ind = 0
+    for (i in unique(d$CHR)){
+      ind = ind + 1
+      d[d$CHR==i,]$index = ind
     }
     
-    QQplot1<-function(plotresult,p_stand,color1,color2){
-      p_value<-as.matrix(plotresult)
-      pvalue<-matrix(p_value,,1)
-      observed<-sort(pvalue[,1])
-      observed<-observed/2
-      observed<-observed[which(observed!=0)]
-      newobserved<-observed[which(observed<(p_stand/2))]
-      lobs<--(log10(newobserved))
-      expected<-c(1:length(newobserved))
-      lexp<--(log10(expected/(length(pvalue)+1)))
-      plot(lexp,lobs,xlim=c(0,max(lexp)),ylim=c(0,max(lobs)),xlab=expression('Expected -log'[10]*'(P)'),ylab=expression('Observed -log'[10]*'(P)'),col=color2)
-      abline(0,1,col=color1)
-    }
-    QQplot2<-function(plotresult,color1,color2){
-      ress1<-as.data.frame(plotresult)
-      pvalue<-as.matrix(ress1)
-      ps<-pvalue[,1]
-      obs.x<-sort(ps)
-      newobs.x<-obs.x[obs.x<1]
-      n<-length(newobs.x)
-      es<-(1:n)/(n+1)
-      x<--log10(es)
-      y<--log10(newobs.x)
-      y<-y-0.3
-      plot(x,y,xlim=c(0.3,max(x)),ylim=c(0.3,max(y)),xlab=expression('Expected -log'[10]*'(P)'),ylab=expression('Observed -log'[10]*'(P)'),col=color2)
-      abline(0,1,col=color1)
-      
-    }
-    LOD<-function(fileplot=NULL,color1,method=NULL){
-      data<-as.matrix(plotresult)
-      data<-as.data.frame(data,stringsAsFactors = F)
-      gen<-data[,1:2]
-      resulty<-data[,3:5]
-      resultkq<-as.matrix(resulty)
-      resultk<-which(resultkq=="",arr.ind = TRUE)
-      resultq<-resulty[1:(resultk[1]-1),]
-      
-      if(nrow(resultq)>1){
-        result<-resultq
-      }else{
-        result<-t(as.matrix(resultq))
+    nchr = length(unique(d$CHR))
+    if (nchr==1) { ## For a single chromosome
+      ## Uncomment the next two linex to plot single chr results in Mb
+      #options(scipen=999)
+      #d$pos=d$BP/1e6
+      d$pos=d$BP
+      ticks=floor(length(d$pos))/2+1
+      xlabel = paste('Chromosome',unique(d$CHR),'position')
+      labs = ticks
+    } else { ## For multiple chromosomes
+      lastbase=0
+      ticks=NULL
+      for (i in unique(d$index)) {
+        if (i==1) {
+          d[d$index==i, ]$pos=d[d$index==i, ]$BP
+        } else {
+          lastbase=lastbase+tail(subset(d,index==i-1)$BP, 1)
+          d[d$index==i, ]$pos=d[d$index==i, ]$BP+lastbase
+        }
+        # Old way: assumes SNPs evenly distributed
+        # ticks=c(ticks, d[d$index==i, ]$pos[floor(length(d[d$index==i, ]$pos)/2)+1])
+        # New way: doesn't make that assumption
+        ticks = c(ticks, (min(d[d$index == i,]$pos) + max(d[d$index == i,]$pos))/2 + 1)
       }
-      
-      galaxyy<-as.data.frame(result)
-      galaxyy<-sapply(galaxyy,as.numeric)
-      chr_pos <- gen[,1:2]
-      chr_pos<-sapply(chr_pos,as.numeric)
-      
-      chr_num <- length(unique(chr_pos[,1]))
-      chr <- matrix(0,chr_num,1)
-      pos <- matrix(0,chr_num,1)
-      for(i in 1:chr_num)
-      {
+      xlabel = 'Chromosomes'
+      #labs = append(unique(d$CHR),'') ## I forgot what this was here for... if seems to work, remove.
+      labs <- unique(d$CHR)
+    }
+    
+    xmax = ceiling(max(d$pos) * 1.03)
+    xmin = floor(max(d$pos) * -0.03)
+    
+    ########draw plot#######################
+    
+    par(mar=mar)
+    def_args <- list(xaxt='n',yaxt="n",bty='n', xaxs='i', yaxs='i', las=1, pch=20,
+                     xlim=c(xmin,xmax), ylim=c(0,log_times*max(d$logp)),
+                     xlab=xlabel,ylab="",mgp=c(HorLabDis,0,0),cex.lab=label_size)
+    
+    dotargs <- list(NULL)
+    do.call("plot", c(NA, dotargs, def_args[!names(def_args) %in% names(dotargs)]))
+    axis(1, at=ticks, labels=labs,lwd=CoorLwd,tck=TckLen,mgp=c(2.5,HorTckDis,0.5),cex.axis=TckLwd)
+    
+    suppressWarnings(axis(2, at=seq(0,log_times*max(d$logp),ceiling(log_times*max(d$logp)/5)),lwd=CoorLwd,tck=TckLen,mgp=c(2.2,VerTckDis,0),cex.axis=TckLwd))
+    mtext(expression(-log[10]('P-value')),side=2,line=VerLabDis,cex=label_size,font=1)
+    
+    # Create a vector of alternatiting colors
+    col=rep(col, max(d$CHR))
+    # Add points to the plot
+    if (nchr==1) {
+      with(d, points(pos, logp, pch=20, col=col[1]))
+    } else {
+      # if multiple chromosomes, need to alternate colors and increase the color index (icol) each chr.
+      icol=1
+      for (i in unique(d$index)) {
+        with(d[d$index==unique(d$index)[i], ], points(pos, logp, col=col[icol], pch=20))
+        icol=icol+1
+      }
+    }
+    d.highlight=d[which(d$SNP %in% highlight), ]
+    highlight_LOD<-as.numeric(data_fin_mark_order[,3])
+    d.highlight<-as.data.frame(cbind(d.highlight,highlight_LOD))
+    
+    ################################
+    par(new=T)
+    
+    def_args <- list(xaxt='n', yaxt='n',bty='n', xaxs='i', yaxs='i', las=1, pch=20,
+                     xlim=c(xmin,xmax), ylim=c(0,LOD_times*max(highlight_LOD)),xlab="",ylab="")
+    dotargs <- list(NULL)
+    do.call("plot", c(NA, dotargs, def_args[!names(def_args) %in% names(dotargs)]))
+    suppressWarnings(axis(4,mgp=c(1.4,VerTckDis,0),at=seq(0,LOD_times*max(highlight_LOD),ceiling(LOD_times*max(highlight_LOD)/5)),col="magenta",col.ticks="magenta",col.axis="magenta",lwd=CoorLwd,tck=TckLen,cex.axis=TckLwd))
+    mtext("LOD score",side=4,line=VerLabDis,cex=label_size,font=1,col="magenta")
+    abline(h=lodline,col="gray25",lty=2,lwd=2)
+    peach_colors<-c("magenta","deepskyblue2")
+    col_pos<-list(NULL)
+    method_num<-sort(unique(data_fin_mark_order[,4]))
+    
+    if(max(unique(data_fin[,3]))<max(unique(data_fin_mark_order[,4]))){
+      col_pos[[1]]<-which(data_fin_mark_order[,4]==max(method_num))
+      col_pos[[2]]<-which(data_fin_mark_order[,4]!=max(method_num))
+    }else{
+      if(length(unique(data_fin[,3]))==1){
+        col_pos[[1]]<-which(data_fin_mark_order[,4]==max(method_num))
+      }else{
+        col_pos[[1]]<-1:nrow(data_fin_mark_order)
         
-        temp <- numeric()
-        temp <- length(which(chr_pos[,1]==i))
-        if(i==1)
-        {
-          pos[i] <- temp
-          chr[i] <- chr_pos[pos[i],2]
-        }else{
-          pos[i] <- pos[i-1] + temp
-          chr[i] <- chr_pos[pos[i],2]
-        }
       }
-      
-      pos_acc <- matrix(0,chr_num,1)
-      for(i in 1:chr_num)
-      {
-        if(i==1){
-          pos_acc[i] <- chr[i]
-        }else{
-          pos_acc[i] <- pos_acc[i-1] + chr[i]
-        }
-      }
-      
-      newres_pos <- galaxyy[,2]
-      res_sumpos <- pos_acc[galaxyy[which(galaxyy[,1]>1),1]-1] + galaxyy[which(galaxyy[,1]>1),2]
-      newres_pos[which(galaxyy[,1]>1)] <- res_sumpos
-      pospic<-c(newres_pos)
-      lodpic<-c(galaxyy[,3])
-      mm<-round(max(pospic)/4000)
-      mm<-as.numeric(format(mm,digits = 1,scientific = TRUE))
-      pospicx<-pospic/mm
-      if(pospicx[1]<20){
-        pospicx[1]<-pospicx[1]+20
-      }
-      pos_acc1<-pos_acc/mm
-      resdf1 <- data.frame(pospicx,lodpic)
-      
-      pp <- ggplot(data=resdf1, aes(x=pospicx, y=lodpic)) +
-        geom_bar(stat="identity", width=0.5, fill="white", linetype="solid",color=color1)
-      
-      pp <- pp + geom_vline(xintercept=c(0,pos_acc1),linetype="dashed",alpha=0.2)
-      pp <- pp  + scale_x_continuous(expand=c(0,0),limits=c(0,(pos_acc1[dim(pos_acc1)[1]]+100))) +
-        scale_y_continuous(expand=c(0,0))
-      pp <- pp + xlab(paste("Genome position (",mm,"bp)",sep = "")) + ylab("LOD score") + ggtitle("") + theme_classic()
-      pp <- pp + theme(axis.title.y = element_text( vjust = 2,hjust=0.5,size = 14),
-                       axis.title.x = element_text(vjust = -0.5,hjust=0.5,size = 14))
-      
-      pp <- pp + theme(panel.background = element_rect(fill = "white"))
-      pp <- pp + theme(text=element_text(family="mono"))
-      pp <- pp + theme(axis.line.y = element_line(colour = "black", linetype = "solid"),
-                       axis.line.x = element_line(colour = "black", linetype = "solid"))
-      print(pp)
-      
     }
+    if(length(col_pos)>1&&length(col_pos[[2]])!=0){
+      with(d.highlight, points(pos[col_pos[[2]]], highlight_LOD[col_pos[[2]]], col=peach_colors[2], pch=20))
+      with(d.highlight, points(pos[col_pos[[2]]], highlight_LOD[col_pos[[2]]], col=peach_colors[2], pch=20,type="h",lty=2))
+      with(d.highlight, points(pos[col_pos[[1]]], highlight_LOD[col_pos[[1]]], col=peach_colors[1], pch=20))
+      with(d.highlight, points(pos[col_pos[[1]]], highlight_LOD[col_pos[[1]]], col=peach_colors[1], pch=20,type="h",lty=2))
+    }else{
+      with(d.highlight, points(pos[col_pos[[1]]], highlight_LOD[col_pos[[1]]], col=peach_colors[1], pch=20))
+      with(d.highlight, points(pos[col_pos[[1]]], highlight_LOD[col_pos[[1]]], col=peach_colors[1], pch=20,type="h",lty=2))
+    }
+  }
+  
+  
+  
+  QQ_mrMLM<-function(data_in,mar=c(2.5,2.5,1,1),label_size=0.7,TckLen=-0.02,
+                     CoorLwd=3,TckLwd=0.6,HorLabDis=1,HorTckDis=0.02,VerLabDis=1.1,
+                     VerTckDis=0.3,P_stand=0.9){
     
-    if(type=="Manhattan"){
-      Manhattan(plotresult,color1,color2)
-    }else if(type=="qq"){
-      if(method=="FASTmrEMMA"){
-        QQplot2(plotresult,color1,color2)
-      }else{
-        QQplot1(plotresult,p_stand,color1,color2)
-      }
-    }else if(type=="LOD"){
-      LOD(plotresult,color1)
+    method<-unique(data_in[,3])
+    data_method<-list(NULL)
+    for(i in 1:length(method)){
+      data_method[[i]]<-data_in[which(data_in[,3]==method[i]),]
     }
+    logp_4method<-numeric()
+    for(i in 1:length(method)){
+      method_p<-data_method[[i]][,8]
+      logp_4method<-cbind(logp_4method,method_p) 
+    }
+    logp_4method<-apply(logp_4method,2,as.numeric)
+    p_4method<-10^-logp_4method
+    p_median<-apply(p_4method,1,median)
+    locsub<-which(p_median==0)
+    pmin<-min(p_median[p_median!=0])
+    subvalue<-10^(1.1*log10(pmin))
+    p_median[locsub]<-subvalue
+    data_p<-as.matrix(p_median)
+    p_value<-data_p
+    pvalue<-matrix(p_value,,1)
+    observed<-sort(pvalue[,1])
+    observed<-observed/2
+    observed<-observed[which(observed!=0)]
+    newobserved<-observed[which(observed<(0.7/2))]
+    lobs<--(log10(newobserved))
+    expected<-c(1:length(newobserved))
+    lexp<--(log10(expected/(length(pvalue)+1)))
+    par(mar=mar)
+    suppressWarnings(plot(lexp,lobs,xlim=c(0,max(lexp)),ylim=c(0,max(lobs)),xlab=expression('Expected -log'[10]*'(P-value)'),
+                          yaxt="n",ylab="",col="blue",pch=20,cex.lab=label_size,tck=TckLen,bty="l",lwd=CoorLwd,
+                          lwd.ticks=CoorLwd,cex.axis=TckLwd,mgp=c(HorLabDis,HorTckDis,0)))
+    suppressWarnings(axis(2, at=seq(0,max(lobs)),lwd=CoorLwd,tck=TckLen,mgp=c(2.2,VerTckDis,0),cex.axis=TckLwd))
+    mtext(expression('Observed -log'[10]*'(P-value)'),side=2,line=VerLabDis,cex=label_size,font=1)
+    abline(0,1,col="red")
+    box(bty="l",lwd=CoorLwd)
   }
 } 
 
@@ -172,8 +280,6 @@ screen<-function(reMR,rawgen,gen_num,phe_num,ps_num){
   return(result)
 }
 
-
-
 svrad<-SearchRadius;svmlod<-CriLOD;lars1<-SelectVariable
 
 if(Genformat=="Num"){Genformat<-1}else if(Genformat=="Cha"){Genformat<-2}else if(Genformat=="Hmp"){Genformat<-3}
@@ -181,9 +287,12 @@ if(Genformat=="Num"){Genformat<-1}else if(Genformat=="Cha"){Genformat<-2}else if
 Plotformat1<-paste("*.",Plotformat,sep="");Plotformat2<-paste("*.",Plotformat,sep="")
 
 readraw<-ReadData(fileGen,filePhe,fileKin,filePS,fileCov,Genformat)
+
 PheName<-readraw$phename
 CLO<-readraw$CLO
+
 print("Running in progress, please be patient...")
+
 
 for (i in trait){
 
@@ -218,41 +327,7 @@ TRY1<-try({
     colnames(tr1)<-"Trait ID"
     colnames(tr1na)<-"Trait name"
     re1MR<-cbind(tr1,tr1na,me1,as.matrix(outMR$result1))
-    remanMR<-outMR$Manhattan
-    reqqMR<-outMR$QQ
-    if(DrawPlot==TRUE){
-      if(Resolution=="Low"){
-        manwidth<-960;manhei<-600;manwordre<-20;manfigurere<-72
-      }else if(Resolution=="High"){
-        manwidth<-10000;manhei<-6000;manwordre<-30;manfigurere<-300 
-      }
-      
-      if(Plotformat1=="*.png"){
-        png(paste(dir,"/",i,"_mrMLM_Manhattan.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-      }else if(Plotformat1=="*.tiff"){
-        tiff(paste(dir,"/",i,"_mrMLM_Manhattan.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-      }else if(Plotformat1=="*.jpeg"){
-        jpeg(paste(dir,"/",i,"_mrMLM_Manhattan.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-      }else if(Plotformat1=="*.pdf"){
-        pdf(paste(dir,"/",i,"_mrMLM_Manhattan.pdf",sep=""),width=10)
-      }
-      
-      Plot(plotresult=remanMR,color1="red",color2="blue",0.95,method="mrMLM",type="Manhattan")
-      dev.off()
-      
-      if(Plotformat2=="*.png"){
-        png(paste(dir,"/",i,"_mrMLM_qq.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-      }else if(Plotformat2=="*.tiff"){
-        tiff(paste(dir,"/",i,"_mrMLM_qq.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-      }else if(Plotformat2=="*.jpeg"){
-        jpeg(paste(dir,"/",i,"_mrMLM_qq.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-      }else if(Plotformat2=="*.pdf"){
-        pdf(paste(dir,"/",i,"_mrMLM_qq.pdf",sep=""),width=10)
-      }
-      Plot(plotresult=reqqMR,color1="red",color2="blue",0.95,method="mrMLM",type="qq")
-      dev.off()
-    }
-  }
+   }
 },silent=FALSE)  
 
 
@@ -281,45 +356,7 @@ if ('try-error' %in% class(TRY1)|| !('try-error' %in% class(TRY1))){
       colnames(tr1)<-"Trait ID"
       colnames(tr1na)<-"Trait name"
       re1FMR<-cbind(tr1,tr1na,me1,as.matrix(outFMR$result1))
-      
-      remanFMR<-outFMR$Manhattan
-      reqqFMR<- outFMR$QQ
-      
-      if(DrawPlot==TRUE){
-        
-        if(Resolution=="Low"){
-          manwidth<-960;manhei<-600;manwordre<-20;manfigurere<-72
-        }else if(Resolution=="High"){
-          manwidth<-10000;manhei<-6000;manwordre<-30;manfigurere<-300 
-        }
-        if(Plotformat1=="*.png"){
-          png(paste(dir,"/",i,"_FASTmrMLM_Manhattan.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.tiff"){
-          tiff(paste(dir,"/",i,"_FASTmrMLM_Manhattan.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_FASTmrMLM_Manhattan.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.pdf"){
-          pdf(paste(dir,"/",i,"_FASTmrMLM_Manhattan.pdf",sep=""),width=10)
-        }
-        
-        Plot(plotresult=remanFMR,color1="red",color2="blue",0.95,method="FASTmrMLM",type="Manhattan")
-        dev.off()
-        
-        if(Plotformat2=="*.png"){
-          png(paste(dir,"/",i,"_FASTmrMLM_qq.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.tiff"){
-          tiff(paste(dir,"/",i,"_FASTmrMLM_qq.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_FASTmrMLM_qq.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.pdf"){
-          pdf(paste(dir,"/",i,"_FASTmrMLM_qq.pdf",sep=""),width=10)
-        }
-        
-        Plot(plotresult=reqqFMR,color1="red",color2="blue",0.95,method="FASTmrMLM",type="qq")
-        dev.off()
-      }
     }
-    
   },silent=FALSE)  
 }
 
@@ -343,7 +380,6 @@ if ('try-error' %in% class(TRY2)|| !('try-error' %in% class(TRY2))){
           reFME<-screen(reFME,InputData$doFME$genRaw,InputData$doFME$gen,InputData$doFME$phe,InputData$doFME$psmatrix)[[1]]
         }
       }
-      
       me1<-matrix("FASTmrEMMA",nrow(outFME$result1),1)
       tr1<-matrix(i,nrow(outFME$result1),1)
       tr1na<-matrix(PheName[i,],nrow(outFME$result1),1)
@@ -351,41 +387,6 @@ if ('try-error' %in% class(TRY2)|| !('try-error' %in% class(TRY2))){
       colnames(tr1)<-"Trait ID"
       colnames(tr1na)<-"Trait name"
       re1FME<-cbind(tr1,tr1na,me1,as.matrix(outFME$result1))
-      remanFME<-outFME$Manhattan
-      reqqFME<-outFME$QQ
-      
-      if(DrawPlot==TRUE){
-        if(Resolution=="Low"){
-          manwidth<-960;manhei<-600;manwordre<-20;manfigurere<-72
-        }else if(Resolution=="High"){
-          manwidth<-10000;manhei<-6000;manwordre<-30;manfigurere<-300 
-        }
-        if(Plotformat1=="*.png"){
-          png(paste(dir,"/",i,"_FASTmrEMMA_Manhattan.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.tiff"){
-          tiff(paste(dir,"/",i,"_FASTmrEMMA_Manhattan.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_FASTmrEMMA_Manhattan.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.pdf"){
-          pdf(paste(dir,"/",i,"_FASTmrEMMA_Manhattan.pdf",sep=""),width=10)
-        }
-        
-        Plot(plotresult=remanFME,color1="red",color2="blue",0.95,method="FASTmrEMMA",type="Manhattan")
-        dev.off()
-        
-        if(Plotformat2=="*.png"){
-          png(paste(dir,"/",i,"_FASTmrEMMA_qq.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.tiff"){
-          tiff(paste(dir,"/",i,"_FASTmrEMMA_qq.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_FASTmrEMMA_qq.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.pdf"){
-          pdf(paste(dir,"/",i,"_FASTmrEMMA_qq.pdf",sep=""),width=10)
-        }
-        
-        Plot(plotresult=reqqFME,color1="red",color2="blue",0.95,method="FASTmrEMMA",type="qq")
-        dev.off()
-      }
     }
   },silent=FALSE)  
   
@@ -410,29 +411,7 @@ if ('try-error' %in% class(TRY3)|| !('try-error' %in% class(TRY3))){
         if(nrow(rePLA)>50){
           rePLAQ<-screen(rePLA,InputData$doMR$genRaw,InputData$doMR$gen,InputData$doMR$phe,InputData$doMR$psmatrix)
           rePLA<-rePLAQ[[1]]
-          plotid<-rePLAQ[[2]] 
-          loc_marker<-rbind(outPLA$plot[plotid,3:5],matrix("",nrow(outPLA$plot[,1:2])-length(plotid),3))
-          replPLA<-cbind(outPLA$plot[,1:2], loc_marker)
         }
-      }
-      if(DrawPlot==TRUE){
-        if(Resolution=="Low"){
-          manwidth<-960;manhei<-240;manwordre<-12;manfigurere<-72
-        }else if(Resolution=="High"){
-          manwidth<-10000;manhei<-6000;manwordre<-30;manfigurere<-600 
-        }
-        if(Plotformat1=="*.png"){
-          png(paste(dir,"/",i,"_pLARmEB_LOD.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.tiff"){
-          tiff(paste(dir,"/",i,"_pLARmEB_LOD.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_pLARmEB_LOD.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.pdf"){
-          pdf(paste(dir,"/",i,"_pLARmEB_LOD.pdf",sep=""),width=12)
-        }
-        
-        Plot(plotresult=replPLA,color1="red",color2="blue",0.95,method="pLARmEB",type="LOD")
-        dev.off()
       }
     }
   },silent=FALSE)  
@@ -466,42 +445,6 @@ if ('try-error' %in% class(TRY4)|| !('try-error' %in% class(TRY4))){
       colnames(tr1)<-"Trait ID"
       colnames(tr1na)<-"Trait name"
       re1PKW<-cbind(tr1,tr1na,me1,as.matrix(outPKW$result1))
-      
-      remanPKW<-outPKW$Manhattan
-      reqqPKW<-outPKW$QQ
-      
-      if(DrawPlot==TRUE){
-        if(Resolution=="Low"){
-          manwidth<-960;manhei<-600;manwordre<-20;manfigurere<-72
-        }else if(Resolution=="High"){
-          manwidth<-10000;manhei<-6000;manwordre<-30;manfigurere<-300 
-        }
-        if(Plotformat1=="*.png"){
-          png(paste(dir,"/",i,"_pKWmEB_Manhattan.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.tiff"){
-          tiff(paste(dir,"/",i,"_pKWmEB_Manhattan.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_pKWmEB_Manhattan.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.pdf"){
-          pdf(paste(dir,"/",i,"_pKWmEB_Manhattan.pdf",sep=""),width=10)
-        }
-        
-        Plot(plotresult=remanPKW,color1="red",color2="blue",0.95,method="pKWmEB",type="Manhattan")
-        dev.off()
-        
-        if(Plotformat2=="*.png"){
-          png(paste(dir,"/",i,"_pKWmEB_qq.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.tiff"){
-          tiff(paste(dir,"/",i,"_pKWmEB_qq.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_pKWmEB_qq.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat2=="*.pdf"){
-          pdf(paste(dir,"/",i,"_pKWmEB_qq.pdf",sep=""),width=10)
-        }
-        
-        Plot(plotresult=reqqPKW,color1="red",color2="blue",0.95,method="pKWmEB",type="qq")
-        dev.off()
-      }
     }
   },silent=FALSE)  
 } 
@@ -525,52 +468,116 @@ if ('try-error' %in% class(TRY5)|| !('try-error' %in% class(TRY5))){
         if(nrow(reISIS)>50){
           reISISQ<-screen(reISIS,InputData$doMR$genRaw,InputData$doMR$gen,InputData$doMR$phe,InputData$doMR$psmatrix)
           reISIS<-reISISQ[[1]]
-          plotid<-reISISQ[[2]]  
-          loc_marker<-rbind(outISIS$plot[plotid,3:5],matrix("",nrow(outISIS$plot[,1:2])-length(plotid),3))
-          replISIS<-cbind(outISIS$plot[,1:2], loc_marker)
         }
-      }
-       if(DrawPlot==TRUE){
-        if(Resolution=="Low"){
-          manwidth<-960;manhei<-240;manwordre<-12;manfigurere<-72
-        }else if(Resolution=="High"){
-          manwidth<-10000;manhei<-6000;manwordre<-30;manfigurere<-600 
-        }
-        if(Plotformat1=="*.png"){
-          png(paste(dir,"/",i,"_ISIS EM-BLASSO_LOD.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.tiff"){
-          tiff(paste(dir,"/",i,"_ISIS EM-BLASSO_LOD.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.jpeg"){
-          jpeg(paste(dir,"/",i,"_ISIS EM-BLASSO_LOD.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
-        }else if(Plotformat1=="*.pdf"){
-          pdf(paste(dir,"/",i,"_ISIS EM-BLASSO_LOD.pdf",sep=""),width=12)
-        }
-        
-        Plot(plotresult=replISIS,color1="red",color2="blue",0.95,method="ISIS EM-BLASSO",type="LOD")
-        dev.off()
       }
     }
-    
   },silent=FALSE)  
 }
 
+if ('try-error' %in% class(TRY6)|| !('try-error' %in% class(TRY6))){
+  TRY7<-try({
+    output1qq<-list(re1MR,re1FMR,re1FME,re1PKW)
+    output1q<-do.call(rbind,output1qq)
 
-if ('try-error' %in% class(TRY6)|| !('try-error' %in% class(TRY6))){    
-  TRY7<-try({ 
-    output1<-list(re1MR,re1FMR,re1FME,re1PKW)
-    output1<-do.call(rbind,output1)
+  if(isFALSE(all(lengths(output1qq)==0))){
+    eff<-numeric()
+    logp<-numeric()
+    for(bb in c(which(lengths(output1qq)!=0))){
+      eff_every<-as.matrix(output1qq[[bb]][,7])
+      colnames(eff_every)<-colnames(output1qq[[bb]])[7]
+      eff<-cbind(eff,eff_every)
+      
+      logp_every<-as.matrix(output1qq[[bb]][,8])
+      colnames(logp_every)<-colnames(output1qq[[bb]])[8]
+      logp<-cbind(logp,logp_every)
+    }
+    gencode1<-as.matrix(output1qq[[which(lengths(output1qq)!=0)[1]]][,9])
+    colnames(gencode1)<-colnames(output1q)[[9]]
+    
+    output1<-cbind(output1qq[[which(lengths(output1qq)!=0)[1]]][,c(1,2,4,5,6)],eff,logp,gencode1)
+    if("SNP effect (pKWmEB)"%in%colnames(output1)){
+      output1<-output1[,-c(which(colnames(output1)%in%"SNP effect (pKWmEB)"))] 
+     }
+    }else{
+      output1<-output1q
+    }
+    
+    write.table(output1,paste(dir,"/",i,"_intermediate result.csv",sep=""),sep=",",row.names=FALSE,col.names = T)
+    
+  },silent=FALSE)
+}
+
+if ('try-error' %in% class(TRY7)|| !('try-error' %in% class(TRY7))){
+  TRY8<-try({
+    
     output<-list(reMR,reFMR,reFME,rePLA,rePKW,reISIS)
     output<-do.call(rbind,output)
     write.table(output,paste(dir,"/",i,"_Final result.csv",sep=""),sep=",",row.names=FALSE,col.names = T)
-    write.table(output1,paste(dir,"/",i,"_intermediate result.csv",sep=""),sep=",",row.names=FALSE,col.names = T)
-  },silent=FALSE)  
+    
+  },silent=FALSE)
+}
+
+
+
+if ('try-error' %in% class(TRY8)|| !('try-error' %in% class(TRY8))){
+  TRY9<-try({
+    
+    if(DrawPlot==TRUE){
+      
+      
+      if(isFALSE(all(lengths(output1qq)==0))){
+      
+      manwidth<-28000;manhei<-7000;manwordre<-60;manfigurere<-600 
+      qqwidth<-10000;qqhei<-10000;qqwordre<-60;qqfigurere<-600 
+      
+      if(Plotformat1=="*.png"){
+        png(paste(dir,"/",i,"_Manhattan plot.png",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
+        manhattan_mrMLM(data_in=as.matrix(output1q),data_fin=as.matrix(output),lodline=CriLOD)
+        dev.off()
+        
+        png(paste(dir,"/",i,"_qq plot.png",sep=""),width=as.numeric(qqwidth), height=as.numeric(qqhei), units= "px", pointsize =as.numeric(qqwordre),res=as.numeric(qqfigurere))
+        QQ_mrMLM(data_in=as.matrix(output1q))
+        dev.off()
+        
+      }else if(Plotformat1=="*.tiff"){
+        tiff(paste(dir,"/",i,"_Manhattan plot.tiff",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
+        manhattan_mrMLM(data_in=as.matrix(output1q),data_fin=as.matrix(output),lodline=CriLOD)
+        dev.off()
+        
+        tiff(paste(dir,"/",i,"_qq plot.tiff",sep=""),width=as.numeric(qqwidth), height=as.numeric(qqhei), units= "px", pointsize =as.numeric(qqwordre),res=as.numeric(qqfigurere))
+        QQ_mrMLM(data_in=as.matrix(output1q))
+        dev.off()
+        
+      }else if(Plotformat1=="*.jpeg"){
+        jpeg(paste(dir,"/",i,"_Manhattan plot.jpeg",sep=""),width=as.numeric(manwidth), height=as.numeric(manhei), units= "px", pointsize =as.numeric(manwordre),res=as.numeric(manfigurere))
+        manhattan_mrMLM(data_in=as.matrix(output1q),data_fin=as.matrix(output),lodline=CriLOD)
+        dev.off()
+        
+        jpeg(paste(dir,"/",i,"_qq plot.jpeg",sep=""),width=as.numeric(qqwidth), height=as.numeric(qqhei), units= "px", pointsize =as.numeric(qqwordre),res=as.numeric(qqfigurere))
+        QQ_mrMLM(data_in=as.matrix(output1q))
+        dev.off()
+        
+      }else if(Plotformat1=="*.pdf"){
+        pdf(paste(dir,"/",i,"_Manhattan plot.pdf",sep=""),width=16,height=4,pointsize = 20)
+        manhattan_mrMLM(data_in=as.matrix(output1q),data_fin=as.matrix(output),CoorLwd=2,lodline=CriLOD)
+        dev.off()
+        
+        pdf(paste(dir,"/",i,"_qq plot.pdf",sep=""),pointsize = 25)
+        QQ_mrMLM(data_in=as.matrix(output1q),CoorLwd=2)
+        dev.off()
+      }
+      
+      }else{
+        warning("Draw plot need intermediate result of mrMLM, FASTmrMLM, FASTmrEMMA or pKWmEB!")
+       }
+    } 
+    
+  },silent=FALSE)
 }
 
 }
 
 }
-
-
 
 
 ReadData<-function(fileGen=NULL,filePhe=NULL,fileKin=NULL,filePS=NULL,fileCov=NULL,Genformat=NULL){

@@ -19,7 +19,8 @@ if(is.null(kk)){
     n<-nrow(X1)
     m<-ncol(X1)
     ########kinship##########
-    kk1<-(X1%*%t(X1))/m
+    #kk1<-(X1%*%t(X1))/m
+    kk1<-mrMLM::multiplication_speed(X1,t(X1))/m
     kk<-as.matrix(kk1) 
   }
   rm(kk1,X1)
@@ -436,7 +437,7 @@ if(inputform==1){
   tempparms[which(abs(tempparms)>=1e-4)]<-round(tempparms[which(abs(tempparms)>=1e-4)],4)
   tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
   parmsShow<-cbind(genRaw[-1,1],parms[,1:2],tempparms,genRaw[-1,4])
-  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","'-log10(P)'","Genotype for code 1")
+  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect (FASTmrMLM)","Sigma2_k_posteriori","Wald","'-log10(P) (FASTmrMLM)'","Genotype for code 1")
   
 }
 if(inputform==2){
@@ -448,7 +449,7 @@ if(inputform==2){
   tempparms[which(abs(tempparms)>=1e-4)]<-round(tempparms[which(abs(tempparms)>=1e-4)],4)
   tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
   parmsShow<-cbind(genRaw[-1,1],parms[,1:2],tempparms,outATCG)
-  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","'-log10(P)'","Genotype for code 1")
+  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect (FASTmrMLM)","Sigma2_k_posteriori","Wald","'-log10(P) (FASTmrMLM)'","Genotype for code 1")
   
 }
 if(inputform==3){
@@ -462,34 +463,11 @@ if(inputform==3){
   tempparms[which(abs(tempparms)>=1e-4)]<-round(tempparms[which(abs(tempparms)>=1e-4)],4)
   tempparms[which(abs(tempparms)<1e-4)]<-as.numeric(sprintf("%.4e",tempparms[which(abs(tempparms)<1e-4)]))
   parmsShow<-cbind(genRaw[-1,1],parms[,1:2],tempparms,outATCG)
-  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","'-log10(P)'","Genotype for code 1")
+  colnames(parmsShow)<-c("RS#","Chromosome","Marker position (bp)","Mean","Sigma2","Sigma2_k","SNP effect (FASTmrMLM)","Sigma2_k_posteriori","Wald","'-log10(P) (FASTmrMLM)'","Genotype for code 1")
   
 }
 
-parmsShow<-as.data.frame(parmsShow)
-rowsnp <- dim(parms)[1]
-snpname <- numeric()
-snpname <- as.matrix(paste("rs",c(1:rowsnp),sep=""))
-bpnumber <- numeric()
-chrnum <- unique(parms[,1])
-for(i in 1:length(chrnum))
-{
-  bpnumber <- rbind(bpnumber,as.matrix(c(1:length(which(parms[,1]==chrnum[i])))))
-}
-parms <- data.frame(parms.pchange,snpname,bpnumber)
-colnames(parms)<-c("Chromosome","Position","Mean","Sigma2","Sigma2_k","SNP effect","Sigma2_k_posteriori","Wald","P-value","SNPname","BPnumber")
-parms<-parms[,-(2:8)]
-mannewp <- as.matrix(0.05/as.numeric(nrow(gen)))
-rowbl<-matrix("",(nrow(parms)-1),1)
-mannepr<-rbind(mannewp,rowbl)
-colnames(mannepr)<-"Manhattan P-value"
 
-parmsm<-cbind(as.matrix(parms),mannepr)
-parmsm<-as.data.frame(parmsm,stringsAsFactors=FALSE)
-
-parmsm[,c(1,2,4)]<-sapply(parmsm[,c(1,2,4)],as.numeric)
-parms.pchange<-as.data.frame(parms.pchange[,-(1:8)])
-colnames(parms.pchange)<-"P-value"
 
 p<-as.vector(parms1[,8])
 ans<-p.adjust(p, method = "bonferroni", n = length(p))
@@ -756,7 +734,7 @@ if(le1!=0){
   }  
 } 
 parmsShow<-parmsShow[,-c(4,5,6,8,9)]
-output<-list(result1=parmsShow,result2=wan,Manhattan=parmsm,QQ=parms.pchange)
+output<-list(result1=parmsShow,result2=wan)
 return(output) 
 }
 }
