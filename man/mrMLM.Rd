@@ -11,8 +11,8 @@ Conduct multi-locus genome-wide association study under the framework of multi-l
 \tabular{ll}{
 Package: \tab mrMLM\cr
 Type: \tab Package\cr
-Version: \tab 4.0.1\cr
-Date: \tab 2020-9-29\cr
+Version: \tab 4.0.2\cr
+Date: \tab 2020-10-8\cr
 Depends: \tab lars\cr
 Imports: \tab methods,foreach,ncvreg,coin,sampling,data.table,doParallel
 \cr
@@ -73,7 +73,7 @@ Zhang Ya-Wen, Li Pei, Zhang Yuan-Ming\cr
 Maintainer: Yuan-Ming Zhang<soyzhang@mail.hzau.edu.cn>
 }
 \note{
-     Once the running of the software mrMLM v4.0.1 is ended, 
+     Once the running of the software mrMLM v4.0.2 is ended, 
      the "results" files should appear on the Directory, which was 
      set up by users before running the software. The results for 
      each trait include "*_intermediate result.csv", "*_Final result.csv", 

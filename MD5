@@ -1,10 +1,10 @@
-240e776950e34d811356535a3dc9ac1c *DESCRIPTION
+5efdf60944b27dd5813cdebdf5d059f8 *DESCRIPTION
 e676471b987b77d307bf0dfd661180e3 *NAMESPACE
 1ea428334525417b4be4bd2db24cad86 *R/FASTmrEMMA.R
 334e3a349e1157171b3e7aaab10385e5 *R/FASTmrMLM.R
 90d18ad2ff2c0939b3b15bb3208a7a1d *R/ISIS.R
 13fc727f547dbbcb17bcb48418218e68 *R/MultiManhattan.R
-1b88c333d9f24e2ea8d4189ca2c1660c *R/RcppExports.R
+259ae7a486a11dac97925ab948b5eb99 *R/RcppExports.R
 4e758517b9e0d47cbab376e2f678bad0 *R/mrMLM.R
 60b53fdd4d9f8d49d395f1c6745449d4 *R/mrMLMFun.R
 01785a3c5abc3731fb5db2b8c7aac130 *R/pKWmEB.R
@@ -15,7 +15,7 @@ d404ed9a42f48d7f432ec9225ad26cb4 *data/Genotype.rda
 5da3d6c1bb95fa8e276c6b796e083ed1 *data/Phenotype.rda
 7f59816d8370624d9aedf57b7264f9a0 *data/ResultFinal.rda
 50b38f95939839790ad5fd699902798a *data/ResultIntermediate.rda
-27f7de545bbbe0c5e0d43ab2d540a2c2 *inst/doc/Instruction.pdf
+589158ceb475f58f68aae320a6de0db9 *inst/doc/Instruction.pdf
 be97d59e31997885bb593eb6bc1bccfc *inst/extdata/Genotype_Cha.csv
 48b553d3b9bd79c13ebab4b07ecd5f54 *inst/extdata/Genotype_Hmp.csv
 69b0093a20a03695736161076facfc13 *inst/extdata/Genotype_Hmp.txt
@@ -38,10 +38,10 @@ c863ae6a464b4de6b4cc19e3340a6a33 *man/Phenotype.Rd
 6b18113fdb4bd261a37eef154410b545 *man/ResultFinal.Rd
 d6f16f0d4ba35bf0e41866c1e6d23bd1 *man/ResultIntermediate.Rd
 b83fde47216c83103519eb02476db54d *man/inputData.Rd
-89af1d8137f19abf1e58609905b54e16 *man/mrMLM.Rd
+a13a2949ca7367cf296789b94bb81d73 *man/mrMLM.Rd
 f7485b7cbd12a78ebc3cdedecf76efa7 *man/mrMLMFun.Rd
 4d7bfbd58420d5729298e04297aed869 *man/multiplication_speed.Rd
 4319df5908f75657d801d0658fb35b3f *man/pKWmEB.Rd
 608269b45a5107c02bee6c90d9985563 *man/pLARmEB.Rd
-46cadcb335e6add9dcd751552772273a *src/RcppExports.cpp
-585aa942b02fbd52016fae4a52459cf8 *src/multiplication_speed.cpp
+0869ecf5dade149d004f31f6e25d78da *src/RcppExports.cpp
+43da9e308f48d7464758af8268f0e49d *src/multiplication_speed.cpp
