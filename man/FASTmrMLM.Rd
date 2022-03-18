@@ -20,7 +20,7 @@ FASTmrMLM(gen,phe,outATCG,genRaw,kk,psmatrix,svpal,svrad,svmlod,Genformat,CLO)
       \item{CLO}{number of CPU.}
 	}
 \author{
-Zhang Ya-Wen, Li Pei, Zhang Yuan-Ming\cr
+Zhang Ya-Wen, Wang Jing-Tian, Li Pei, Zhang Yuan-Ming\cr
 Maintainer: Yuan-Ming Zhang<soyzhang@mail.hzau.edu.cn>
 }
 \examples{

@@ -2,8 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 multiplication_speed <- function(A, B) {
-    .Call('_mrMLM_multiplication_speed', PACKAGE = 'mrMLM', A, B)
+    .Call(`_mrMLM_multiplication_speed`, A, B)
 }
-
-
 

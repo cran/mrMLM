@@ -15,7 +15,7 @@ ReadData(fileGen,filePhe,fileKin,filePS,fileCov,Genformat)
       \item{Genformat}{genotype format.}
       }
 \author{
-Zhang Ya-Wen, Li Pei, Zhang Yuan-Ming\cr
+Zhang Ya-Wen, Wang Jing-Tian, Li Pei, Zhang Yuan-Ming\cr
 Maintainer: Yuan-Ming Zhang<soyzhang@mail.hzau.edu.cn>
 }
 \examples{

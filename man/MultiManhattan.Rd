@@ -59,7 +59,7 @@ GeneNameColour=NULL,...)
     \item{...}{Arguments passed to points, axis, text.}
    }
 \author{
-Zhang Ya-Wen, Li Pei, and Zhang Yuan-Ming\cr
+Zhang Ya-Wen, Wang Jing-Tian, Li Pei, and Zhang Yuan-Ming\cr
 Maintainer: Yuan-Ming Zhang<soyzhang@mail.hzau.edu.cn>
 }
 \examples{
