@@ -1,8 +1,8 @@
 Package: mrMLM
 Type: Package
 Title: Multi-Locus Random-SNP-Effect Mixed Linear Model Tools for GWAS
-Version: 5.0
-Date: 2022-3-18
+Version: 5.0.1
+Date: 2022-3-27
 Maintainer: Yuan-Ming Zhang <soyzhang@mail.hzau.edu.cn>
 Contact: Yuan-Ming Zhang <soyzhang@mail.hzau.edu.cn>
 Authors@R: c( person("Ya-Wen", "Zhang", role="aut")
@@ -18,9 +18,9 @@ Imports: Rcpp (>= 0.12.14),methods,foreach,ncvreg,coin(>=
 License: GPL (>= 2)
 LinkingTo: Rcpp, RcppEigen
 NeedsCompilation: yes
-Packaged: 2022-03-18 13:07:51 UTC; Administrator
+Packaged: 2022-03-27 08:03:33 UTC; Administrator
 Repository: CRAN
-Date/Publication: 2022-03-18 14:00:06 UTC
+Date/Publication: 2022-03-27 08:50:02 UTC
 Author: Ya-Wen Zhang [aut],
   Jing-Tian Wang [aut],
   Pei Li [aut],

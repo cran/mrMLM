@@ -14,7 +14,11 @@ if(DrawPlot==TRUE){
     method<-unique(data_in[,3])
     data_method<-list(NULL)
     for(i in 1:length(method)){
-      data_method[[i]]<-data_in[which(data_in[,3]==method[i]),]
+      if(length(which(data_in[,3]==method[i]))==1){
+        data_method[[i]]<-matrix(data_in[which(data_in[,3]==method[i]),],nrow=1)
+      }else{
+        data_method[[i]]<-data_in[which(data_in[,3]==method[i]),]
+      }
     }
     logp_4method<-numeric()
     for(i in 1:length(method)){
@@ -244,7 +248,7 @@ if(DrawPlot==TRUE){
 
 if(PC==TRUE){
 
-  #### When PC=TRUE, mrMLM v5.0 may calculate big data (millions of SNPs for thousands of individuals) on personal computer such as desktop or laptop, which have much smaller RAM than server.
+  #### When PC=TRUE, mrMLM v5.0.1 may calculate big data (millions of SNPs for thousands of individuals) on personal computer such as desktop or laptop, which have much smaller RAM than server.
   #### 2022-03-14 Wang Jing-Tian
 
   Genformat <- 1
@@ -267,8 +271,10 @@ if(PC==TRUE){
     BLOCK_M=20000
   }else if(RAM>15&&RAM<=31){
     BLOCK_M=30000
-  }else if(RAM>31){
+  }else if(RAM>31&&RAM<=50){
     BLOCK_M=60000
+  }else if(RAM>50){
+    BLOCK_M=100000
   }else{
     BLOCK_M=1000
   }
@@ -284,13 +290,18 @@ if(PC==TRUE){
     phy_match_list <- list(phy,match_gen_ID_idex)
     return(phy_match_list)
   }
-  inutpe_transform <- function(gen_bed,gen_bim,gen_fam,match_gen_ID_idex,index_left,index_right){
-    gen_block <- as.matrix(cbind(gen_bim[,c(1,4)][index_left:index_right,],t(gen_bed[match_gen_ID_idex,(index_left:index_right)]-1)))
+  inutpe_transform <- function(gen_bed,gen_bim,gen_fam,match_gen_ID_idex,index_left,index_right,FASTmrEMMA=FALSE){
+    if(FASTmrEMMA==FALSE){
+      gen_block <- as.matrix(cbind(gen_bim[,c(1,4)][index_left:index_right,],t(gen_bed[match_gen_ID_idex,(index_left:index_right)]-1)))
+    }else if(FASTmrEMMA==TRUE){
+      gen_block <- as.matrix(cbind(gen_bim[,c(1,4)][index_left:index_right,],t(gen_bed[match_gen_ID_idex,(index_left:index_right)]/2)))
+    }
+    gen_block[is.na(gen_block)] <- 0
     genRaw_block <- as.matrix(rbind(t(c("rs#","chrom","pos","genotype for code 1")),gen_bim[,c(2,1,4,5)][index_left:index_right,],use.names=FALSE))
     return(list(gen_block,genRaw_block))
   }
 
-  mrMLMFun.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M,trait){
+  mrMLMFun.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M){
     print("Running mrMLMFun algorithm with low RAM consumption...")
 
     # K
@@ -301,8 +312,8 @@ if(PC==TRUE){
       #####
       block_lengthout <- round(ncol(gen_bed)/block_m,0)+1
       if(block_lengthout<3){
-        block_point_left <- c(1)
-        block_point_left <- ncol(gen_bed)
+        block_point_left <- c(1,(round(ncol(gen_bed)/2,0)+1))
+        block_point_right <- c(round(ncol(gen_bed)/2,0),ncol(gen_bed))
       }else{
         block_point_left <- round(seq(1,ncol(gen_bed),length.out=block_lengthout),0)
         block_point_right <- block_point_left[-1]-1
@@ -314,6 +325,7 @@ if(PC==TRUE){
       for(block_i in 1:length(block_point_left)){
 
         gen_block_i <- gen_bed[match_gen_ID_idex,(block_point_left[block_i] : block_point_right[block_i])]-1
+        gen_block_i[is.na(gen_block_i)] <- 0
         K_block_i <- K_block_i + multiplication_speed(gen_block_i,t(gen_block_i))
         rm(gen_block_i)
       }
@@ -323,7 +335,7 @@ if(PC==TRUE){
       return(K)
     }
     if(is.null(fileKin)){
-      K <- K_PC(gen_bed,match_gen_ID_idex,block_m=20000)
+      K <- K_PC(gen_bed,match_gen_ID_idex,block_m=BLOCK_M)
     }else{
       fileKin <- as.matrix(fread(fileKin,header = FALSE,stringsAsFactors=T))
       fileKin[1,2:ncol(fileKin)]<-"  "
@@ -336,23 +348,18 @@ if(PC==TRUE){
       rm(kkPre,locKin,sameGenKin,nameKin)
     }
     gc()
-
-    #
-
-    #
-    phe <- as.matrix(phy[,trait])
+    phe <- phy
     #####
     block_lengthout <- round(ncol(gen_bed)/block_m,0)+1
     if(block_lengthout<3){
-      block_point_left <- c(1)
-      block_point_left <- ncol(gen_bed)
+      block_point_left <- c(1,(round(ncol(gen_bed)/2,0)+1))
+      block_point_right <- c(round(ncol(gen_bed)/2,0),ncol(gen_bed))
     }else{
       block_point_left <- round(seq(1,ncol(gen_bed),length.out=block_lengthout),0)
       block_point_right <- block_point_left[-1]-1
       block_point_right[length(block_point_right)] <- block_point_right[length(block_point_right)]+1
       block_point_left <- block_point_left[-length(block_point_left)]
     }
-
 
     ll_read <- matrix(0,1,10)
     genRaw_read <- matrix(0,1,4)
@@ -373,10 +380,6 @@ if(PC==TRUE){
         genRaw_read <- genRaw_read[-1,]
         inpute_block <- inutpe_transform(gen_bed,gen_bim,gen_fam,phy_match_list[[2]],block_point_left[block_i],block_point_right[block_i])
         total_result <- mrMLMFun_2.0(gen=inpute_block[[1]],phe=phe,genRaw=inpute_block[[2]],kk=K,fin_block=fin_block,read_ll=ll_read,read_genRaw=genRaw_read,block_i=block_i,genq_BED=gen_bed,match_gen_ID_idex=phy_match_list[[2]])
-
-        # write.csv(total_result$result1,paste(dir,"/mid_result.csv",sep=""))
-        # write.csv(total_result$result2,paste(dir,"/fin_result.csv",sep=""))
-
         rm(genRaw_read,ll_read)
         gc()
 
@@ -385,7 +388,7 @@ if(PC==TRUE){
     }
     return(total_result)
   }
-  FASTmrMLM.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M,trait){
+  FASTmrMLM.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M){
     print("Running FASTmrMLM algorithm with low RAM consumption...")
     # K
     K_FASTmrMLM_PC <- function(gen_bed,match_gen_ID_idex,block_m=20000){
@@ -394,8 +397,8 @@ if(PC==TRUE){
       #####
       block_lengthout <- round(ncol(gen_bed)/block_m,0)+1
       if(block_lengthout<3){
-        block_point_left <- c(1)
-        block_point_left <- ncol(gen_bed)
+        block_point_left <- c(1,(round(ncol(gen_bed)/2,0)+1))
+        block_point_right <- c(round(ncol(gen_bed)/2,0),ncol(gen_bed))
       }else{
         block_point_left <- round(seq(1,ncol(gen_bed),length.out=block_lengthout),0)
         block_point_right <- block_point_left[-1]-1
@@ -407,6 +410,7 @@ if(PC==TRUE){
       for(block_i in 1:length(block_point_left)){
 
         gen_block_i <- gen_bed[match_gen_ID_idex,(block_point_left[block_i] : block_point_right[block_i])]-1
+        gen_block_i[is.na(gen_block_i)] <- 0
         K_block_i <- K_block_i + multiplication_speed(gen_block_i,t(gen_block_i))
         rm(gen_block_i)
       }
@@ -430,13 +434,13 @@ if(PC==TRUE){
     }
     gc()
 
-    phe <- as.matrix(phy[,trait])
+    phe <- phy
 
     #####
     block_lengthout <- round(ncol(gen_bed)/block_m,0)+1
     if(block_lengthout<3){
-      block_point_left <- c(1)
-      block_point_left <- ncol(gen_bed)
+      block_point_left <- c(1,(round(ncol(gen_bed)/2,0)+1))
+      block_point_right <- c(round(ncol(gen_bed)/2,0),ncol(gen_bed))
     }else{
       block_point_left <- round(seq(1,ncol(gen_bed),length.out=block_lengthout),0)
       block_point_right <- block_point_left[-1]-1
@@ -473,13 +477,13 @@ if(PC==TRUE){
     }
     return(total_result)
   }
-  FASTmrEMMA.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M,trait,Likelihood=Likelihood){
+  FASTmrEMMA.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M,Likelihood=Likelihood){
     print("Running FASTmrEMMA algorithm with low RAM consumption...")
     #####
     block_lengthout <- round(ncol(gen_bed)/block_m,0)+1
     if(block_lengthout<3){
-      block_point_left <- c(1)
-      block_point_left <- ncol(gen_bed)
+      block_point_left <- c(1,(round(ncol(gen_bed)/2,0)+1))
+      block_point_right <- c(round(ncol(gen_bed)/2,0),ncol(gen_bed))
     }else{
       block_point_left <- round(seq(1,ncol(gen_bed),length.out=block_lengthout),0)
       block_point_right <- block_point_left[-1]-1
@@ -492,25 +496,30 @@ if(PC==TRUE){
       K_block_i <- matrix(0,length(match_gen_ID_idex),length(match_gen_ID_idex))
       block_i <- 1
       for(block_i in 1:length(block_point_left)){
-
         gen_block_i <- t(gen_bed[match_gen_ID_idex,(block_point_left[block_i] : block_point_right[block_i])]/2)
+        d_gen_block_i <- gen_block_i
+        r_gen_block_i <- gen_block_i
 
         ###
         flags <- matrix(as.double(rowMeans(gen_block_i,na.rm=TRUE) > 0.5),nrow(gen_block_i),ncol(gen_block_i))
-        gen_block_i[!is.na(gen_block_i) & (gen_block_i == 0.5)] <- flags[!is.na(gen_block_i) & (gen_block_i == 0.5)]
-        mafs <- matrix(rowMeans(gen_block_i,na.rm=TRUE),nrow(gen_block_i),ncol(gen_block_i))
-        gen_block_i[is.na(gen_block_i)] <- mafs[is.na(gen_block_i)]
+        d_gen_block_i[!is.na(gen_block_i) & (gen_block_i == 0.5)] <- flags[!is.na(gen_block_i) & (gen_block_i == 0.5)]
+        rm(flags)
+        flags <- matrix(as.double(rowMeans(gen_block_i,na.rm=TRUE) < 0.5),nrow(gen_block_i),ncol(gen_block_i))
+        r_gen_block_i[!is.na(gen_block_i) & (gen_block_i == 0.5)] <- flags[!is.na(gen_block_i) & (gen_block_i == 0.5)]
+        rm(flags,gen_block_i)
+        gc()
+
+        snps <- rbind(d_gen_block_i,r_gen_block_i)
+        mafs <- matrix(rowMeans(snps,na.rm=TRUE),nrow(snps),ncol(snps))
+        snps[is.na(snps)] <- mafs[is.na(snps)]
         rm(mafs)
         gc()
 
-
-
-        K_block_i <- K_block_i + multiplication_speed(t(gen_block_i),gen_block_i) + multiplication_speed(t(1-gen_block_i),(1-gen_block_i))
-        rm(gen_block_i)
+        K_block_i <- K_block_i + multiplication_speed(t(snps),snps) + multiplication_speed(t(1-snps),(1-snps))
       }
 
       K <- K_block_i/ncol(gen_bed)
-      diag(K) <- 1
+      #diag(K) <- 1
       return(K)
     }
     if(is.null(fileKin)){
@@ -528,7 +537,7 @@ if(PC==TRUE){
     }
     gc()
 
-    phe <- as.matrix(phy[,trait])
+    phe <- phy
 
     ll_read <- numeric(0)
     genRaw_read <- numeric(0)
@@ -537,16 +546,15 @@ if(PC==TRUE){
     for(block_i in 1:length(block_point_left)){
       if(block_i!=length(block_point_left)){
 
-        inpute_block <- inutpe_transform(gen_bed,gen_bim,gen_fam,phy_match_list[[2]],block_point_left[block_i],block_point_right[block_i])
+        inpute_block <- inutpe_transform(gen_bed,gen_bim,gen_fam,phy_match_list[[2]],block_point_left[block_i],block_point_right[block_i],FASTmrEMMA=TRUE)
         mid_result_i <- FASTmrEMMA_2.0(gen=inpute_block[[1]],phe=phe,genRaw=inpute_block[[2]],kk=K,fin_block=fin_block,read_ll=NULL,block_i=block_i)
         ll_read <- rbind(ll_read,mid_result_i$result3)
         genRaw_read <- rbind(genRaw_read,inpute_block[[2]])
         rm(inpute_block,mid_result_i)
         gc()
-        #print(block_i)
       }else{
         fin_block=TRUE
-        inpute_block <- inutpe_transform(gen_bed,gen_bim,gen_fam,phy_match_list[[2]],block_point_left[block_i],block_point_right[block_i])
+        inpute_block <- inutpe_transform(gen_bed,gen_bim,gen_fam,phy_match_list[[2]],block_point_left[block_i],block_point_right[block_i],FASTmrEMMA=TRUE)
         total_result <- FASTmrEMMA_2.0(gen=inpute_block[[1]],phe=phe,genRaw=inpute_block[[2]],kk=K,fin_block=fin_block,read_ll=ll_read,read_genRaw=genRaw_read,block_i=block_i,genq_BED=gen_bed,match_gen_ID_idex=phy_match_list[[2]])
         rm(genRaw_read,ll_read)
         gc()
@@ -554,13 +562,13 @@ if(PC==TRUE){
     }
     return(total_result)
   }
-  pKWmEB.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M,trait){
+  pKWmEB.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,block_m=BLOCK_M){
     print("Running pKWmEB algorithm with low RAM consumption...")
     #####
     block_lengthout <- round(ncol(gen_bed)/block_m,0)+1
     if(block_lengthout<3){
-      block_point_left <- c(1)
-      block_point_left <- ncol(gen_bed)
+      block_point_left <- c(1,(round(ncol(gen_bed)/2,0)+1))
+      block_point_right <- c(round(ncol(gen_bed)/2,0),ncol(gen_bed))
     }else{
       block_point_left <- round(seq(1,ncol(gen_bed),length.out=block_lengthout),0)
       block_point_right <- block_point_left[-1]-1
@@ -576,8 +584,8 @@ if(PC==TRUE){
       #####
       block_lengthout <- round(ncol(gen_bed)/block_m,0)+1
       if(block_lengthout<3){
-        block_point_left <- c(1)
-        block_point_left <- ncol(gen_bed)
+        block_point_left <- c(1,(round(ncol(gen_bed)/2,0)+1))
+        block_point_right <- c(round(ncol(gen_bed)/2,0),ncol(gen_bed))
       }else{
         block_point_left <- round(seq(1,ncol(gen_bed),length.out=block_lengthout),0)
         block_point_right <- block_point_left[-1]-1
@@ -589,6 +597,7 @@ if(PC==TRUE){
       for(block_i in 1:length(block_point_left)){
 
         gen_block_i <- gen_bed[match_gen_ID_idex,(block_point_left[block_i] : block_point_right[block_i])]-1
+        gen_block_i[is.na(gen_block_i)] <- 0
         K_block_i <- K_block_i + multiplication_speed(gen_block_i,t(gen_block_i))
         rm(gen_block_i)
       }
@@ -612,7 +621,7 @@ if(PC==TRUE){
     }
     gc()
 
-    phe <- as.matrix(phy[,trait])
+    phe <- phy
 
     ll_read <- numeric(0)
     genRaw_read <- numeric(0)
@@ -630,18 +639,14 @@ if(PC==TRUE){
         fin_block=TRUE
         inpute_block <- inutpe_transform(gen_bed,gen_bim,gen_fam,phy_match_list[[2]],block_point_left[block_i],block_point_right[block_i])
         total_result <- pKWmEB_2.0(gen=inpute_block[[1]],phe=phe,genRaw=inpute_block[[2]],kk=K,fin_block=fin_block,read_ll=ll_read,read_genRaw=genRaw_read,block_i=block_i,match_gen_ID_idex=phy_match_list[[2]])
-        # write.csv(total_result$result1,paste(dir,"/pKWmEB_mid_result.csv",sep=""))
-        # write.csv(as.matrix(total_result$result2),paste(dir,"/pKWmEB_fin_result.csv",sep=""),row.names=FALSE)
-
-        #rm(genRaw_read,ll_read)
         gc()
       }
     }
     return(total_result)
   }
-  pLARmEB.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list,trait){
+  pLARmEB.PC <- function(gen_bed,gen_bim,gen_fam,phy,phy_match_list){
     print("Running pLARmEB algorithm with low RAM consumption...")
-    phe <- as.matrix(phy[,trait])
+    phe <- phy
     total_result <- pLARmEB_2.0(phe,match_gen_ID_idex=phy_match_list[[2]],CriLOD=3)
 
     return(total_result)
@@ -1333,14 +1338,14 @@ if(PC==TRUE){
           no_porderrow<-as.matrix(no_porderrow)
           g0<-g0[no_porderrow,1]
           g0<-as.matrix(g0)
-          xxx0<-t(genq_BED[match_gen_ID_idex,c(g0)]-1)
           if(dim(g0)[1]==1){
-            xxx0<-as.matrix(xxx0)
+            xxx0<-as.matrix(genq_BED[match_gen_ID_idex,c(g0)]-1)
+            xxx0[is.na(xxx0)] <- 0
           }
           if(dim(g0)[1]>1)
           {
-            xxx0<-as.matrix(xxx0)
-            xxx0<-t(xxx0)
+            xxx0<-as.matrix(t(genq_BED[match_gen_ID_idex,c(g0)]-1))
+            xxx0[is.na(xxx0)] <- 0
           }
           phe<-as.matrix(phe)
           if((flagps==1)||(exists("psmatrix")==FALSE))
@@ -1382,8 +1387,10 @@ if(PC==TRUE){
         a2<-as.matrix(a2)
         if(nrow(a2)>1){
           xx<-genq_BED[match_gen_ID_idex,c(a2)]-1
+          xx[is.na(xx)] <- 0
         }else{
           xx<-genq_BED[match_gen_ID_idex,c(a2)]-1
+          xx[is.na(xx)] <- 0
         }
         xx<-as.matrix(xx)
         if((flagps==1)||(exists("psmatrix")==FALSE))
@@ -1477,19 +1484,28 @@ if(PC==TRUE){
 
               if((flagps==1)||(exists("psmatrix")==FALSE))
               {
-                ex<-cbind(matrix(1,(nrow(xx)),1),(genq_BED[match_gen_ID_idex,c(ww)]-1))
+                genq_BED_NA1 <- (genq_BED[match_gen_ID_idex,c(ww)]-1)
+                genq_BED_NA1[is.na(genq_BED_NA1)] <- 0
+                ex<-cbind(matrix(1,(nrow(xx)),1),genq_BED_NA1)
               }else if(flagps==0)
               {
-                ex<-cbind(cbind(matrix(1,(nrow(xx)),1),psmatrix),(genq_BED[match_gen_ID_idex,c(ww)]-1))
+                genq_BED_NA1 <- (genq_BED[match_gen_ID_idex,c(ww)]-1)
+                genq_BED_NA1[is.na(genq_BED_NA1)] <- 0
+                ex<-cbind(cbind(matrix(1,(nrow(xx)),1),psmatrix),genq_BED_NA1)
               }
 
             }else{
               if((flagps==1)||(exists("psmatrix")==FALSE))
               {
-                ex<-cbind(matrix(1,(nrow(xx)),1),as.matrix(genq_BED[match_gen_ID_idex,c(ww)]-1))
+                genq_BED_NA1 <- as.matrix(genq_BED[match_gen_ID_idex,c(ww)]-1)
+                genq_BED_NA1[is.na(genq_BED_NA1)] <- 0
+                ex<-cbind(matrix(1,(nrow(xx)),1),)
               }else if(flagps==0)
               {
-                ex<-cbind(cbind(matrix(1,(nrow(xx)),1),psmatrix),as.matrix(genq_BED[match_gen_ID_idex,c(ww)]-1))
+                genq_BED_NA1 <- as.matrix(genq_BED[match_gen_ID_idex,c(ww)]-1)
+                ex<-cbind(cbind(matrix(1,(nrow(xx)),1),psmatrix),genq_BED_NA1)
+                genq_BED_NA1[is.na(genq_BED_NA1)] <- 0
+                ex[is.na(ex)] <- 0
               }
             }
             rm(genq)
@@ -1564,6 +1580,7 @@ if(PC==TRUE){
 
             #x<-gen[3:nrow(gen),]
             xxxx<-as.matrix(genq_BED[match_gen_ID_idex,ww]-1)
+            xxxx[is.na(xxxx)] <- 0
 
             #rm(x)
             gc()
@@ -2717,11 +2734,13 @@ if(PC==TRUE){
         if(length(vid)!=0){
           if(length(vid)==1){
             xname.emma.opt<-matrix(gen_bim[vid,c(1,4)],1,)
-            xdata<-t(matrix(t(gen_bed[match_gen_ID_idex,vid]-1),1,))
+            xdata<-t(matrix(t(gen_bed[match_gen_ID_idex,vid]/2),1,))
+            xdata[is.na(xdata)] <- 0
             xdata<-matrix(xdata,,1)
           }else{
             xname.emma.opt<-gen_bim[vid,c(1,4)]
-            xdata<-t(as.matrix(t(gen_bed[match_gen_ID_idex,vid]-1)))
+            xdata<-t(as.matrix(t(gen_bed[match_gen_ID_idex,vid]/2)))
+            xdata[is.na(xdata)] <- 0
           }
 
           ydata<-Y
@@ -2737,8 +2756,9 @@ if(PC==TRUE){
             }
 
             gc()
-
-            maf.snp.2<-matrix(t(unlist(apply((gen_bed[match_gen_ID_idex,vid][,idslod]-1),2,maf.fun))),nrow = 4)
+            gen_bed_NA <- gen_bed[match_gen_ID_idex,vid][,idslod]/2
+            gen_bed_NA[is.na(gen_bed_NA)] <- 0
+            maf.snp.2<-matrix(t(unlist(apply(as.matrix(gen_bed_NA),2,maf.fun))),nrow = 4)
             maf.snp.3<-t(maf.snp.2)
             maf.snp.4<-data.frame(maf.snp.3)
             names(maf.snp.4)<-c("p1","p2","p3","maf")
@@ -2776,7 +2796,7 @@ if(PC==TRUE){
               for(i in 1:wan_len){
                 chr_pos<-which(genraw[,2]==wan[i,1])
                 new_matrix<-genraw[chr_pos,]
-                posi_pos<-which(new_matrix[,3]==wan[i,2])
+                posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
                 mark<-matrix(new_matrix[posi_pos,1],1,)
                 marker<-rbind(marker,mark)
                 sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -2792,7 +2812,7 @@ if(PC==TRUE){
               for(i in 1:wan_len){
                 chr_pos<-which(genraw[,2]==wan[i,1])
                 new_matrix<-genraw[chr_pos,]
-                posi_pos<-which(new_matrix[,3]==wan[i,2])
+                posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
                 mark<-matrix(new_matrix[posi_pos,1],1,)
                 marker<-rbind(marker,mark)
                 sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -2810,7 +2830,7 @@ if(PC==TRUE){
               for(i in 1:wan_len){
                 chr_pos<-which(genraw[,2]==wan[i,1])
                 new_matrix<-genraw[chr_pos,]
-                posi_pos<-which(new_matrix[,3]==wan[i,2])
+                posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
                 mark<-matrix(new_matrix[posi_pos,1],1,)
                 marker<-rbind(marker,mark)
                 sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -3350,7 +3370,9 @@ if(PC==TRUE){
           }
           if (length(sigg1)>nrow(X1))
           {
-            larsres<-lars((genq_BED[match_gen_ID_idex,sigg1]-1), y, type = "lar",trace = FALSE, normalize = TRUE, intercept = TRUE, eps = .Machine$double.eps, use.Gram=FALSE)
+            genq_BED_NA <- genq_BED[match_gen_ID_idex,sigg1]-1
+            genq_BED_NA[is.na(genq_BED_NA)] <- 0
+            larsres<-lars(genq_BED_NA, y, type = "lar",trace = FALSE, normalize = TRUE, intercept = TRUE, eps = .Machine$double.eps, use.Gram=FALSE)
             larsc2<-sigg1[which(larsres$entry!=0)]
             if(length(which(larsres$entry>nrow(X1)))!=0)
             {
@@ -3374,7 +3396,7 @@ if(PC==TRUE){
           }
           le1<-length(larsc)
           xxxnew11<-as.matrix(genq_BED[match_gen_ID_idex,larsc]-1)
-
+          xxxnew11[is.na(xxxnew11)] <- 0
           u1<-ebayes_EM(z,xxxnew11,y)
           obj<-u1$u
           result1<-matrix(0,ncol(gen_bed),1)
@@ -3393,13 +3415,16 @@ if(PC==TRUE){
               bbo[i,]=Res1[sig1[i]]
             }
             xxxx<-as.matrix(genq_BED[match_gen_ID_idex,sig1]-1)
+            xxxx[is.na(xxxx)] <- 0
             yn<-as.matrix(y)
             xxn<-z
             lod<-likelihood(xxn,xxxx,yn,bbo)
 
             her1<-vector(length=le2)
             for (i in 1:le2){
-              p1<-length(as.vector(which((genq_BED[match_gen_ID_idex,sig1[i]]-1)==1)))/length(genq_BED[match_gen_ID_idex,sig1[i]])
+              genq_BED_NA2 <- (genq_BED[match_gen_ID_idex,sig1[i]]-1)
+              genq_BED_NA2[is.na(genq_BED_NA2)] <- 0
+              p1<-length(as.vector(which(genq_BED_NA2==1)))/length(genq_BED_NA2)
               p2<-1-p1
               her1[i]=((p1+p2)-(p1-p2)^2)*(Res1[sig1[i]])^2
             }
@@ -3423,6 +3448,7 @@ if(PC==TRUE){
                 sig1<-sslod[,1]
               }
               xxxx<-as.matrix(genq_BED[match_gen_ID_idex,sig1]-1)
+              xxxx[is.na(xxxx)] <- 0
               lod<-sslod[,2]
               her<-sslod[,3]
 
@@ -3514,7 +3540,7 @@ if(PC==TRUE){
                   for(i in 1:wan_len){
                     chr_pos<-which(genraw[,2]==wan[i,1])
                     new_matrix<-genraw[chr_pos,]
-                    posi_pos<-which(new_matrix[,3]==wan[i,2])
+                    posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
                     mark<-matrix(new_matrix[posi_pos,1],1,)
                     marker<-rbind(marker,mark)
                     sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -3532,7 +3558,7 @@ if(PC==TRUE){
                   for(i in 1:wan_len){
                     chr_pos<-which(genraw[,2]==wan[i,1])
                     new_matrix<-genraw[chr_pos,]
-                    posi_pos<-which(new_matrix[,3]==wan[i,2])
+                    posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
                     mark<-matrix(new_matrix[posi_pos,1],1,)
                     marker<-rbind(marker,mark)
                     sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -3550,7 +3576,7 @@ if(PC==TRUE){
                   for(i in 1:wan_len){
                     chr_pos<-which(genraw[,2]==wan[i,1])
                     new_matrix<-genraw[chr_pos,]
-                    posi_pos<-which(new_matrix[,3]==wan[i,2])
+                    posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
                     mark<-matrix(new_matrix[posi_pos,1],1,)
                     marker<-rbind(marker,mark)
                     sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -4408,6 +4434,7 @@ if(PC==TRUE){
         gg <- numeric()
         nchoice <- ff[,2]
         genchoice <- t(gen_bed[match_gen_ID_idex,nchoice]-1)
+        genchoice[is.na(genchoice)] <- 0
         newpheno <- as.matrix(rawphe[((ii-1)*sam+1):(ii*sam),1])
 
         aall <- lars(t(genchoice),newpheno,type="lar",use.Gram=FALSE)
@@ -4431,13 +4458,14 @@ if(PC==TRUE){
           ggbayes <- numeric()
           optloci <- gg
           optgen <- t(gen_bed[match_gen_ID_idex,c(optloci)]-1)
+          optgen[is.na(optgen)] <- 0
           newphebayes <- as.matrix(rawphe[((ii-1)*sam+1):(ii*sam),1])
           bbeff <- ebayes_EM(fix,t(optgen),newphebayes)
           lod <- likelihood(fix,t(optgen),newphebayes,bbeff$u)
           optlod <- which(lod>svmlod)
           if(length(optlod)>0){
             locich <- optloci[optlod]
-            ggbayes <- cbind(ii,locich,matrix(gen_bim[locich,c(1,4)],,2),bbeff$u[optlod],lod[optlod],bbeff$sigma2)
+            ggbayes <- cbind(ii,locich,as.matrix(gen_bim[locich,c(1,4)]),bbeff$u[optlod],lod[optlod],bbeff$sigma2)
           }
           gglartotal <- ggbayes
           rm(rawgen)
@@ -4474,6 +4502,7 @@ if(PC==TRUE){
 
           ##################choose 50 number variable from lars######################
           optgen50 <- t(gen_bed[match_gen_ID_idex,c(optloci50)]-1)
+          optgen50[is.na(optgen50)] <- 0
           phebayes <- as.matrix(rawphe[((ii-1)*sam+1):(ii*sam),1])
           bbeff50 <- ebayes_EM(fix,t(optgen50),phebayes)
           lod50 <- likelihood(fix,t(optgen50),phebayes,bbeff50$u)
@@ -4487,6 +4516,7 @@ if(PC==TRUE){
 
           ##################choose 100 number variable from lars#####################
           optgen100 <- t(gen_bed[match_gen_ID_idex,c(optloci100)]-1)
+          optgen100[is.na(optgen100)] <- 0
           phebayes <- as.matrix(rawphe[((ii-1)*sam+1):(ii*sam),1])
           bbeff100 <- ebayes_EM(fix,t(optgen100),phebayes)
           lod100 <- likelihood(fix,t(optgen100),phebayes,bbeff100$u)
@@ -4500,6 +4530,7 @@ if(PC==TRUE){
 
           ##################choose 150 number variable from lars#####################
           optgen150 <- t(gen_bed[match_gen_ID_idex,c(optloci150)]-1)
+          optgen150[is.na(optgen150)] <- 0
           phebayes <- as.matrix(rawphe[((ii-1)*sam+1):(ii*sam),1])
           bbeff150 <- ebayes_EM(fix,t(optgen150),phebayes)
           lod150 <- likelihood(fix,t(optgen150),phebayes,bbeff150$u)
@@ -4534,18 +4565,21 @@ if(PC==TRUE){
           if(length(optlod50)==1)
           {
             xx1 <- as.matrix(t(gen_bed[match_gen_ID_idex,ggbayes50[,2]]-1))
+            xx1[is.na(xx1)] <- 0
             lmres1 <- lm(phebayes~xx1)
             aic1 <- AIC(lmres1)
           }
           if(length(optlod100)==1)
           {
             xx2 <- as.matrix(t(gen_bed[match_gen_ID_idex,ggbayes100[,2]]-1))
+            xx2[is.na(xx2)] <- 0
             lmres2 <- lm(phebayes~xx2)
             aic2 <- AIC(lmres2)
           }
           if(length(optlod150)==1)
           {
             xx3 <- as.matrix(t(gen_bed[match_gen_ID_idex,ggbayes150[,2]]-1))
+            xx3[is.na(xx3)] <- 0
             lmres3 <- lm(phebayes~xx3)
             aic3 <- AIC(lmres3)
           }
@@ -4553,18 +4587,21 @@ if(PC==TRUE){
           if(length(optlod50)>1)
           {
             xx1 <- gen_bed[match_gen_ID_idex,unlist(ggbayes50[,2])]-1
+            xx1[is.na(xx1)] <- 0
             lmres1 <- lm(phebayes~xx1)
             aic1 <- AIC(lmres1)
           }
           if(length(optlod100)>1)
           {
             xx2 <- gen_bed[match_gen_ID_idex,unlist(ggbayes100[,2])]-1
+            xx2[is.na(xx2)] <- 0
             lmres2 <- lm(phebayes~xx2)
             aic2 <- AIC(lmres2)
           }
           if(length(optlod150)>1)
           {
             xx3 <- gen_bed[match_gen_ID_idex,unlist(ggbayes150[,2])]-1
+            xx3[is.na(xx3)] <- 0
             lmres3 <- lm(phebayes~xx3)
             aic3 <- AIC(lmres3)
           }
@@ -4606,20 +4643,30 @@ if(PC==TRUE){
 
             if((flagps==1)||(exists("psmatrix")==FALSE))
             {
-              ex<-cbind(fix,(gen_bed[match_gen_ID_idex,finalres[,2]]-1))
+              gen_bed_NA4 <- (gen_bed[match_gen_ID_idex,finalres[,2]]-1)
+              gen_bed_NA4[is.na(gen_bed_NA4)] <- 0
+              ex<-cbind(fix,gen_bed_NA4)
+              ex[is.na(ex)] <- 0
             }else if(flagps==0)
             {
-              ex<-cbind(cbind(fix,psmatrix),(gen_bed[match_gen_ID_idex,finalres[,2]]-1))
+              gen_bed_NA4 <- (gen_bed[match_gen_ID_idex,finalres[,2]]-1)
+              gen_bed_NA4[is.na(gen_bed_NA4)] <- 0
+              ex<-cbind(cbind(fix,psmatrix),gen_bed_NA4)
+              ex[is.na(ex)] <- 0
             }
 
           }else{
 
             if((flagps==1)||(exists("psmatrix")==FALSE))
             {
-              ex<-cbind(fix,as.matrix(gen_bed[match_gen_ID_idex,unlist(finalres[,2])]-1))
+              gen_bed_NA3 <- (gen_bed[match_gen_ID_idex,unlist(finalres[,2])]-1)
+              gen_bed_NA3[is.na(gen_bed_NA3)] <- 0
+              ex<-cbind(fix,gen_bed_NA3)
             }else if(flagps==0)
             {
-              ex<-cbind(cbind(fix,psmatrix),as.matrix(t(gen_bed[match_gen_ID_idex,unlist(finalres[,2])]-1)))
+              gen_bed_NA3 <- (gen_bed[match_gen_ID_idex,unlist(finalres[,2])]-1)
+              gen_bed_NA3[is.na(gen_bed_NA3)] <- 0
+              ex<-cbind(cbind(fix,psmatrix),gen_bed_NA3)
             }
           }
 
@@ -4681,7 +4728,9 @@ if(PC==TRUE){
 
           gc()
 
-          xxxx<-as.matrix(gen_bed[match_gen_ID_idex,unlist(finalres[,2])][3:nrow(gen_bed),]-1)
+          xxxx_NA <- gen_bed[match_gen_ID_idex,unlist(finalres[,2])]
+          xxxx_NA[is.na(xxxx_NA)] <- 1
+          xxxx<-as.matrix(xxxx_NA[3:length(match_gen_ID_idex),]-1)
 
           xxmaf<-t(xxxx)
 
@@ -4739,7 +4788,9 @@ if(PC==TRUE){
           {
             wan<-data.frame(needrs,gen_bim[unlist(finalres[,2]),c(1,4)],eeff,lo,her,maf,needgenofor)
             wan<-wan[order(wan[,2]),]
-            wan<-data.frame(wan,rbind(finalres[1,7],as.matrix(rep("",(tempvar-1))),use.names=FALSE),rbind(phevartotal,as.matrix(rep("",(tempvar-1)))))
+            rep_a <- as.matrix(rep("",(tempvar-1)))
+            colnames(rep_a) <- colnames(as.matrix(finalres[1,7]))
+            wan<-data.frame(wan,rbind(as.matrix(finalres[1,7]),rep_a),rbind(as.matrix(phevartotal),rep_a))
           }
 
           tempwan <- wan
@@ -4794,12 +4845,12 @@ if(PC==TRUE){
     {
       warning("Please input correct phenotypic data !")
     }
-    if((is.null(gene.data)==FALSE)&&(is.null(phe)==FALSE)&&(nrow(gen_bed)!=(nrow(phe))))
+    if((is.null(gene.data)==FALSE)&&(is.null(phe)==FALSE)&&(length(match_gen_ID_idex)!=(nrow(phe))))
     {
       warning("Sample size in genotypic dataset doesn't equal to the sample size in phenotypic dataset !")
     }
 
-    if((is.null(gene.data)==FALSE)&&(is.null(phe)==FALSE)&&((nrow(gen_bed)==(nrow(phe))))&&(lodvalue>=0)&&(lars1>0))
+    if((is.null(gene.data)==FALSE)&&(is.null(phe)==FALSE)&&((length(match_gen_ID_idex)==(nrow(phe))))&&(lodvalue>=0)&&(lars1>0))
     {
 
       wan<-NULL
@@ -5593,7 +5644,7 @@ if(PC==TRUE){
       if(is.null(psmatrix)==FALSE){
         psmatrix<-as.matrix(psmatrix)
       }
-      nsam <-nrow(gen_bed)
+      nsam <-length(match_gen_ID_idex)
       chrnum<-nrow(unique(gen_bim[,1]))
 
       W.orig<-matrix(1,nsam,1)
@@ -5609,6 +5660,7 @@ if(PC==TRUE){
 
       for(i in 1:chrnum){
         xot <-gen_bed[match_gen_ID_idex,which(gen_bim==i)]-1
+        xot[is.na(xot)] <- 0
         #kk[[i]]<-mrMLM::multiplication_speed(xot,t(xot))
         kk[[i]]<-xot%*%t(xot)
         cc[[i]]<-mean(diag(kk[[i]]))
@@ -5620,6 +5672,7 @@ if(PC==TRUE){
       for(i in 1:chrnum){
 
         xx1 <- t(gen_bed[match_gen_ID_idex,which(gen_bim[,1]==i)]-1)
+        xx1[is.na(xx1)] <- 0
         YY1 <- matrix(Y.data,,1)
 
         K1 <- (kktotal-kk[[i]])/(sum(unlist(cc))-as.numeric(cc[i]))
@@ -5738,9 +5791,10 @@ if(PC==TRUE){
 
         if(length(countnum)==1){
           xx2 <- matrix((gen_bed[match_gen_ID_idex,c(countnum)]-1),1,)
-
+          xx2[is.na(xx2)] <- 0
         }else{
           xx2 <- as.matrix(t(gen_bed[match_gen_ID_idex,c(countnum)]-1))
+          xx2[is.na(xx2)] <- 0
         }
         YY2 <- matrix(Y.data,,1)
 
@@ -5771,14 +5825,20 @@ if(PC==TRUE){
       }
 
       if(length(countnum)==1){
-        xeb <- cbind(gen_bim[c(countnum),c(1,4)],matrix((gen_bed[match_gen_ID_idex,c(countnum)]-1),1,))
+        gen_bed_NA5 <- matrix((gen_bed[match_gen_ID_idex,c(countnum)]-1),1,)
+        gen_bed_NA5[is.na(gen_bed_NA5)] <- 0
+        xeb <- cbind(gen_bim[c(countnum),c(1,4)],gen_bed_NA5)
+        xeb[is.na(xeb)] <- 0
         ebrow <-matrix(xeb[,1:2],,2)
         xeb1<-matrix(xeb[,3:ncol(xeb)],1,)
         xxeb <- as.matrix(t(xeb1))
         nmak <- ncol(xxeb)
 
       }else{
-        xeb <- cbind(gen_bim[c(countnum),c(1,4)],as.matrix(t(gen_bed[match_gen_ID_idex,c(countnum)]-1)))
+        gen_bed_NA5 <- as.matrix(t(gen_bed[match_gen_ID_idex,c(countnum)]-1))
+        gen_bed_NA5[is.na(gen_bed_NA5)] <- 0
+        xeb <- cbind(gen_bim[c(countnum),c(1,4)],gen_bed_NA5)
+        xeb[is.na(xeb)] <- 0
         ebrow <-as.matrix(xeb[,1:2])
         xeb1<-as.matrix(xeb)
         xxeb <- as.matrix(t(xeb1[,-c(1:2)]))
@@ -5904,7 +5964,7 @@ if(PC==TRUE){
           for(i in 1:wan_len){
             chr_pos<-which(genraw[,2]==wan[i,1])
             new_matrix<-genraw[chr_pos,]
-            posi_pos<-which(new_matrix[,3]==wan[i,2])
+            posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
             mark<-matrix(new_matrix[posi_pos,1],1,)
             marker<-rbind(marker,mark)
             sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -5922,7 +5982,7 @@ if(PC==TRUE){
           for(i in 1:wan_len){
             chr_pos<-which(genraw[,2]==wan[i,1])
             new_matrix<-genraw[chr_pos,]
-            posi_pos<-which(new_matrix[,3]==wan[i,2])
+            posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
             mark<-matrix(new_matrix[posi_pos,1],1,)
             marker<-rbind(marker,mark)
             sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -5939,7 +5999,7 @@ if(PC==TRUE){
           for(i in 1:wan_len){
             chr_pos<-which(genraw[,2]==wan[i,1])
             new_matrix<-genraw[chr_pos,]
-            posi_pos<-which(new_matrix[,3]==wan[i,2])
+            posi_pos<-which(new_matrix[,3]==wan[i,2])[1]
             mark<-matrix(new_matrix[posi_pos,1],1,)
             marker<-rbind(marker,mark)
             sn<-matrix(new_matrix[posi_pos,4],1,)
@@ -5971,128 +6031,10 @@ if(PC==TRUE){
   gen_fam <- fread(paste(fileGen,".fam",sep=""))
   genRaw_dup_TF <- duplicated(gen_bim[,c(1,4)])
   if(sum(genRaw_dup_TF)!=0){
-    gen_bim[genRaw_dup_TF,4] <- gen_bim[genRaw_dup_TF,4]+1
+    gen_bim[genRaw_dup_TF,4] <- gen_bim[genRaw_dup_TF,4]+seq(1,sum(genRaw_dup_TF),1)
   }
   phy <- as.matrix(fread(filePhe,header=FALSE))
-  PheName <- as.matrix(phy[1,-1])
-  phy_match_list <- phy_match(gen_fam,phy)
-  match_gen_ID_idex <- phy_match_list[[2]]
-  samename_genphy <- phy_match_list[[1]][-1,1]
-  phy <- as.matrix(apply(phy_match_list[[1]][-1,-1],2,as.numeric))
 
-
-  # psmatrix
-  psmatrix <- NULL
-  if(!is.null(filePS)){
-    filePS<-fread(filePS,header = FALSE,stringsAsFactors=T)
-    filePS<-as.matrix(filePS)
-
-    nnpprow<-dim(filePS)[1]
-    nnppcol<-dim(filePS)[2]
-    filePS[1,2:nnppcol]<-"  "
-    psmatrixPre<-filePS[3:nnpprow,]
-    namePop<-as.matrix(psmatrixPre[,1])
-    sameGenPop<-intersect(samename_genphy,namePop)
-    locPop<-match(sameGenPop,namePop)
-    selectpsmatrixq<-psmatrixPre[locPop,-1]
-    if(PopStrType=="Q"){
-      selectpsmatrix<-matrix(as.numeric(selectpsmatrixq),nrow = length(locPop))
-      coldelet<-which.min(apply(selectpsmatrix,2,sum))
-      psmatrix<-as.matrix(selectpsmatrix[,-coldelet])
-    }else if(PopStrType=="PCA"){
-      psmatrix<-matrix(as.numeric(selectpsmatrixq),nrow = length(locPop))
-    }else if(PopStrType=="EvolPopStr"){
-      otrait_ind<-sort(unique(selectpsmatrixq))
-      pop_col<-length(otrait_ind)-1
-      pop_each<-numeric()
-      for(j in 1:length(selectpsmatrixq)){
-        if(selectpsmatrixq[j]==otrait_ind[1]){
-          pop_0<-matrix(-1,1,pop_col)
-        }else{
-          pop_0<-matrix(0,1,pop_col)
-          popnum_loc<-which(otrait_ind[]==selectpsmatrixq[j])
-          pop_0[1,popnum_loc-1]<-1
-        }
-        pop_each<-rbind(pop_each,pop_0)
-      }
-
-      psmatrix=pop_each
-    }
-  }
-
-  # fileCovphy
-  covmatrixRaw<-NULL
-  if(!is.null(fileCov)){
-    covmatrixRaw<-fread(fileCov,header = FALSE,stringsAsFactors=T)
-    covmatrixRaw<-as.matrix(covmatrixRaw)
-  }
-  if(is.null(covmatrixRaw)){
-    phy<-phy
-  }else{
-    nncovrow<-nrow(covmatrixRaw)
-    covmatrixPre<-covmatrixRaw[3:nncovrow,]
-    namecov<-as.matrix(covmatrixPre[,1])
-    sameGencov<-intersect(samename_genphy,namecov)
-    loccov<-match(sameGencov,namecov)
-    selectcovmatrixq<-covmatrixPre[loccov,-1]
-
-    covname<-covmatrixRaw[2,-1]
-    label<-substr(covname,1,3)
-    if(("Cat"%in%label)&&("Con"%in%label)){
-      cat_loc<-as.numeric(which(label=="Cat"))
-      con_loc<-as.numeric(which(label=="Con"))
-      selectcovmatrixqq<-selectcovmatrixq
-      selectcovmatrixq<-selectcovmatrixq[,cat_loc]
-      covnum<-t(selectcovmatrixq)
-      yygg1<-numeric()
-      for(i in 1:nrow(covnum)){
-        otrait_ind<-sort(unique(covnum[i,]))
-        cov_col<-length(otrait_ind)-1
-        col_each<-numeric()
-        for(j in 1:length(covnum[i,])){
-          if(covnum[i,j]==otrait_ind[length(otrait_ind)]){
-            cov_0<-matrix(-1,1,cov_col)
-          }else{
-            cov_0<-matrix(0,1,cov_col)
-            covnum_loc<-which(otrait_ind[]==covnum[i,j])
-            cov_0[1,covnum_loc]<-1
-          }
-          col_each<-rbind(col_each,cov_0)
-
-        }
-        yygg1<-cbind(yygg1,col_each)
-      }
-      yygg1<-cbind(yygg1,as.matrix(selectcovmatrixqq[,con_loc]))
-    }else if(all(label=="Cat")){
-      covnum<-t(selectcovmatrixq)
-      yygg1<-numeric()
-      for(i in 1:nrow(covnum)){
-        otrait_ind<-sort(unique(covnum[i,]))
-        cov_col<-length(otrait_ind)-1
-        col_each<-numeric()
-        for(j in 1:length(covnum[i,])){
-          if(covnum[i,j]==otrait_ind[length(otrait_ind)]){
-            cov_0<-matrix(-1,1,cov_col)
-          }else{
-            cov_0<-matrix(0,1,cov_col)
-            covnum_loc<-which(otrait_ind[]==covnum[i,j])
-            cov_0[1,covnum_loc]<-1
-          }
-          col_each<-rbind(col_each,cov_0)
-
-        }
-        yygg1<-cbind(yygg1,col_each)
-      }
-    }else if(all(label=="Con")){
-      yygg1<-selectcovmatrixq
-    }
-
-    W.orig<-matrix(1,nrow(phy),1)
-    xenvir<-cbind(W.orig,yygg1)
-    xenvir<-apply(xenvir,2,as.numeric)
-    beta<-solve(t(xenvir)%*%xenvir)%*%t(xenvir)%*%phy
-    phy<-phy-xenvir%*%beta+W.orig
-  }
 
   # svmlod
   if(is.null(svmlod)){svmlod <- 3}
@@ -6104,6 +6046,7 @@ if(PC==TRUE){
       reMR4<-as.matrix(reMR[,4])
       datashuz1<-gen_bim[,2]
       calculate_gene<-gen_bed[match_gen_ID_idex,which(datashuz1%in%reMR4)]-1
+      calculate_gene[is.na(calculate_gene)] <- 0
       gene_shuzhi<-apply(calculate_gene,2,as.numeric)
       larsres<-lars(gene_shuzhi,phe_num,type = "lar",trace = FALSE,use.Gram=FALSE,max.steps=200)
       X<-gene_shuzhi[,which(larsres$beta[nrow(larsres$beta),]!=0)]
@@ -6120,6 +6063,7 @@ if(PC==TRUE){
       reMR4<-as.matrix(reMR[,4])
       datashuz1<-as.matrix(gen_bim[,2])
       calculate_gene<-gen_bed[match_gen_ID_idex,which(datashuz1%in%reMR4)]-1
+      calculate_gene[is.na(calculate_gene)] <- 0
       gene_shuzhi<-apply(calculate_gene,2,as.numeric)
       X<-gene_shuzhi
       z<-cbind(matrix(1,nrow(gene_shuzhi),1),psmatrix)
@@ -6137,32 +6081,158 @@ if(PC==TRUE){
   }
 
   trait_i <- 1
-  for(trait_i in 1:trait){
+  for(trait_i in trait){
+    print(paste("For the trait ",trait_i,": ",sep=""))
     i <- trait_i
     reMR<-NULL;reFMR<-NULL;reFME<-NULL;rePLA<-NULL;rePKW<-NULL;reISIS<-NULL
     re1MR<-NULL;re1FMR<-NULL;re1FME<-NULL;re1PLA<-NULL;re1PKW<-NULL;re1ISIS<-NULL
     remanMR<-NULL;reqqMR<-NULL;remanFMR<-NULL;reqqFMR<-NULL;remanFME<-NULL;reqqFME<-NULL;
     replPLA<-NULL;remanPKW<-NULL;reqqPKW<-NULL; replISIS<-NULL;metaresult<-NULL;result_output<-NULL
 
+    phy_trait_i <- phy[is.na(phy[,(trait_i+1)])==F,][,c(1,(trait_i+1))]
+
+    PheName <- as.matrix(phy_trait_i[1,-1])
+
+    phy_match_list <- phy_match(gen_fam,phy_trait_i)
+    match_gen_ID_idex <- phy_match_list[[2]]
+    samename_genphy <- phy_match_list[[1]][-1,1]
+    phy_trait_i <- as.matrix(apply(matrix(phy_match_list[[1]][-1,-1],ncol=1),2,as.numeric))
+
+
+    # psmatrix
+    psmatrix <- NULL
+    if(!is.null(filePS)){
+      filePS<-fread(filePS,header = FALSE,stringsAsFactors=T)
+      filePS<-as.matrix(filePS)
+
+      nnpprow<-dim(filePS)[1]
+      nnppcol<-dim(filePS)[2]
+      filePS[1,2:nnppcol]<-"  "
+      psmatrixPre<-filePS[3:nnpprow,]
+      namePop<-as.matrix(psmatrixPre[,1])
+      sameGenPop<-intersect(samename_genphy,namePop)
+      locPop<-match(sameGenPop,namePop)
+      selectpsmatrixq<-psmatrixPre[locPop,-1]
+      if(PopStrType=="Q"){
+        selectpsmatrix<-matrix(as.numeric(selectpsmatrixq),nrow = length(locPop))
+        coldelet<-which.min(apply(selectpsmatrix,2,sum))
+        psmatrix<-as.matrix(selectpsmatrix[,-coldelet])
+      }else if(PopStrType=="PCA"){
+        psmatrix<-matrix(as.numeric(selectpsmatrixq),nrow = length(locPop))
+      }else if(PopStrType=="EvolPopStr"){
+        otrait_ind<-sort(unique(selectpsmatrixq))
+        pop_col<-length(otrait_ind)-1
+        pop_each<-numeric()
+        for(j in 1:length(selectpsmatrixq)){
+          if(selectpsmatrixq[j]==otrait_ind[1]){
+            pop_0<-matrix(-1,1,pop_col)
+          }else{
+            pop_0<-matrix(0,1,pop_col)
+            popnum_loc<-which(otrait_ind[]==selectpsmatrixq[j])
+            pop_0[1,popnum_loc-1]<-1
+          }
+          pop_each<-rbind(pop_each,pop_0)
+        }
+
+        psmatrix=pop_each
+      }
+    }
+
+    # fileCovphy
+    covmatrixRaw<-NULL
+    if(!is.null(fileCov)){
+      covmatrixRaw<-fread(fileCov,header = FALSE,stringsAsFactors=T)
+      covmatrixRaw<-as.matrix(covmatrixRaw)
+    }
+    if(is.null(covmatrixRaw)){
+      phy_trait_i<-phy_trait_i
+    }else{
+      nncovrow<-nrow(covmatrixRaw)
+      covmatrixPre<-covmatrixRaw[3:nncovrow,]
+      namecov<-as.matrix(covmatrixPre[,1])
+      sameGencov<-intersect(samename_genphy,namecov)
+      loccov<-match(sameGencov,namecov)
+      selectcovmatrixq<-covmatrixPre[loccov,-1]
+
+      covname<-covmatrixRaw[2,-1]
+      label<-substr(covname,1,3)
+      if(("Cat"%in%label)&&("Con"%in%label)){
+        cat_loc<-as.numeric(which(label=="Cat"))
+        con_loc<-as.numeric(which(label=="Con"))
+        selectcovmatrixqq<-selectcovmatrixq
+        selectcovmatrixq<-selectcovmatrixq[,cat_loc]
+        covnum<-t(selectcovmatrixq)
+        yygg1<-numeric()
+        for(i in 1:nrow(covnum)){
+          otrait_ind<-sort(unique(covnum[i,]))
+          cov_col<-length(otrait_ind)-1
+          col_each<-numeric()
+          for(j in 1:length(covnum[i,])){
+            if(covnum[i,j]==otrait_ind[length(otrait_ind)]){
+              cov_0<-matrix(-1,1,cov_col)
+            }else{
+              cov_0<-matrix(0,1,cov_col)
+              covnum_loc<-which(otrait_ind[]==covnum[i,j])
+              cov_0[1,covnum_loc]<-1
+            }
+            col_each<-rbind(col_each,cov_0)
+
+          }
+          yygg1<-cbind(yygg1,col_each)
+        }
+        yygg1<-cbind(yygg1,as.matrix(selectcovmatrixqq[,con_loc]))
+      }else if(all(label=="Cat")){
+        covnum<-t(selectcovmatrixq)
+        yygg1<-numeric()
+        for(i in 1:nrow(covnum)){
+          otrait_ind<-sort(unique(covnum[i,]))
+          cov_col<-length(otrait_ind)-1
+          col_each<-numeric()
+          for(j in 1:length(covnum[i,])){
+            if(covnum[i,j]==otrait_ind[length(otrait_ind)]){
+              cov_0<-matrix(-1,1,cov_col)
+            }else{
+              cov_0<-matrix(0,1,cov_col)
+              covnum_loc<-which(otrait_ind[]==covnum[i,j])
+              cov_0[1,covnum_loc]<-1
+            }
+            col_each<-rbind(col_each,cov_0)
+
+          }
+          yygg1<-cbind(yygg1,col_each)
+        }
+      }else if(all(label=="Con")){
+        yygg1<-selectcovmatrixq
+      }
+
+      W.orig<-matrix(1,nrow(phy_trait_i),1)
+      xenvir<-cbind(W.orig,yygg1)
+      xenvir<-apply(xenvir,2,as.numeric)
+      beta<-solve(t(xenvir)%*%xenvir)%*%t(xenvir)%*%phy_trait_i
+      phy_trait_i<-phy_trait_i-xenvir%*%beta+W.orig
+    }
+
+
+
     TRY1<-try({
 
       if("mrMLM"%in%method){
-        outMR <- mrMLMFun.PC(gen_bed,gen_bim,gen_fam,phy=phy,phy_match_list,block_m=BLOCK_M,trait=trait_i)
+        outMR <- mrMLMFun.PC(gen_bed,gen_bim,gen_fam,phy=phy_trait_i,phy_match_list,block_m=BLOCK_M)
         if(is.null(outMR$result2)==FALSE){
           me<-matrix("mrMLM",nrow(outMR$result2),1)
           tr<-matrix(trait_i,nrow(outMR$result2),1)
-          trna<-matrix(PheName[trait_i,],nrow(outMR$result2),1)
+          trna<-matrix(PheName,nrow(outMR$result2),1)
           colnames(me)<-"Method"
           colnames(tr)<-"Trait ID"
           colnames(trna)<-"Trait name"
           reMR<-cbind(tr,trna,me,as.matrix(outMR$result2))
           if(nrow(reMR)>50){
-            reMR<-screen_PC(reMR,phy[,trait_i])[[1]]
+            reMR<-screen_PC(reMR,phy_trait_i)[[1]]
           }
         }
         me1<-matrix("mrMLM",nrow(outMR$result1),1)
         tr1<-matrix(trait_i,nrow(outMR$result1),1)
-        tr1na<-matrix(PheName[trait_i,],nrow(outMR$result1),1)
+        tr1na<-matrix(PheName,nrow(outMR$result1),1)
         colnames(me1)<-"Method"
         colnames(tr1)<-"Trait ID"
         colnames(tr1na)<-"Trait name"
@@ -6175,23 +6245,23 @@ if(PC==TRUE){
       TRY2<-try({
 
         if("FASTmrMLM"%in%method){
-          outFMR <- FASTmrMLM.PC(gen_bed,gen_bim,gen_fam,phy=phy,phy_match_list,block_m=BLOCK_M,trait=trait_i)
+          outFMR <- FASTmrMLM.PC(gen_bed,gen_bim,gen_fam,phy=phy_trait_i,phy_match_list,block_m=BLOCK_M)
           if(is.null(outFMR$result2)==FALSE){
             me<-matrix("FASTmrMLM",nrow(outFMR$result2),1)
             tr<-matrix(trait_i,nrow(outFMR$result2),1)
-            trna<-matrix(PheName[trait_i,],nrow(outFMR$result2),1)
+            trna<-matrix(PheName,nrow(outFMR$result2),1)
             colnames(me)<-"Method"
             colnames(tr)<-"Trait ID"
             colnames(trna)<-"Trait name"
             reFMR<-cbind(tr,trna,me,as.matrix(outFMR$result2))
             if(nrow(reFMR)>50){
-              reFMR<-screen_PC(reFMR,phy[,trait_i])[[1]]
+              reFMR<-screen_PC(reFMR,phy_trait_i)[[1]]
             }
           }
 
           me1<-matrix("FASTmrMLM",nrow(outFMR$result1),1)
           tr1<-matrix(trait_i,nrow(outFMR$result1),1)
-          tr1na<-matrix(PheName[trait_i,],nrow(outFMR$result1),1)
+          tr1na<-matrix(PheName,nrow(outFMR$result1),1)
           colnames(me1)<-"Method"
           colnames(tr1)<-"Trait ID"
           colnames(tr1na)<-"Trait name"
@@ -6206,23 +6276,23 @@ if(PC==TRUE){
       TRY3<-try({
 
         if("FASTmrEMMA"%in%method){
-          outFME <- FASTmrEMMA.PC(gen_bed,gen_bim,gen_fam,phy=phy,phy_match_list,block_m=BLOCK_M,trait=trait_i,Likelihood="REML")
+          outFME <- FASTmrEMMA.PC(gen_bed,gen_bim,gen_fam,phy=phy_trait_i,phy_match_list,block_m=BLOCK_M,Likelihood="REML")
 
           if(is.null(outFME$result2)==FALSE){
             me<-matrix("FASTmrEMMA",nrow(outFME$result2),1)
             tr<-matrix(trait_i,nrow(outFME$result2),1)
-            trna<-matrix(PheName[trait_i,],nrow(outFME$result2),1)
+            trna<-matrix(PheName,nrow(outFME$result2),1)
             colnames(me)<-"Method"
             colnames(tr)<-"Trait ID"
             colnames(trna)<-"Trait name"
             reFME<-cbind(tr,trna,me,as.matrix(outFME$result2))
             if(nrow(reFME)>50){
-              reFME<-screen_PC(reFME,phy[,trait_i])[[1]]
+              reFME<-screen_PC(reFME,phy_trait_i)[[1]]
             }
           }
           me1<-matrix("FASTmrEMMA",nrow(outFME$result1),1)
           tr1<-matrix(trait_i,nrow(outFME$result1),1)
-          tr1na<-matrix(PheName[trait_i,],nrow(outFME$result1),1)
+          tr1na<-matrix(PheName,nrow(outFME$result1),1)
           colnames(me1)<-"Method"
           colnames(tr1)<-"Trait ID"
           colnames(tr1na)<-"Trait name"
@@ -6238,18 +6308,18 @@ if(PC==TRUE){
       TRY4<-try({
 
         if("pLARmEB"%in%method){
-          outPLA <- pLARmEB.PC(gen_bed,gen_bim,gen_fam,phy=phy,phy_match_list,trait=trait_i)
+          outPLA <- pLARmEB.PC(gen_bed,gen_bim,gen_fam,phy=phy_trait_i,phy_match_list)
           if(is.null(outPLA$result)==FALSE){
             me<-matrix("pLARmEB",nrow(outPLA$result),1)
             tr<-matrix(trait_i,nrow(outPLA$result),1)
-            trna<-matrix(PheName[trait_i,],nrow(outPLA$result),1)
+            trna<-matrix(PheName,nrow(outPLA$result),1)
             colnames(me)<-"Method"
             colnames(tr)<-"Trait ID"
             colnames(trna)<-"Trait name"
             rePLA<-cbind(tr,trna,me,as.matrix(outPLA$result))
             replPLA<-outPLA$plot
             if(nrow(rePLA)>50){
-              rePLAQ<-screen_PC(rePLA,phy[,trait_i])
+              rePLAQ<-screen_PC(rePLA,phy_trait_i)
               rePLA<-rePLAQ[[1]]
             }
           }
@@ -6264,23 +6334,23 @@ if(PC==TRUE){
       TRY5<-try({
 
         if("pKWmEB"%in%method){
-          outPKW <- pKWmEB.PC(gen_bed,gen_bim,gen_fam,phy=phy,phy_match_list,block_m=BLOCK_M,trait=trait_i)
+          outPKW <- pKWmEB.PC(gen_bed,gen_bim,gen_fam,phy=phy_trait_i,phy_match_list,block_m=BLOCK_M)
 
           if(is.null(outPKW$result2)==FALSE){
             me<-matrix("pKWmEB",nrow(outPKW$result2),1)
             tr<-matrix(trait_i,nrow(outPKW$result2),1)
-            trna<-matrix(PheName[trait_i,],nrow(outPKW$result2),1)
+            trna<-matrix(PheName,nrow(outPKW$result2),1)
             colnames(me)<-"Method"
             colnames(tr)<-"Trait ID"
             colnames(trna)<-"Trait name"
             rePKW<-cbind(tr,trna,me,as.matrix(outPKW$result2))
             if(nrow(rePKW)>50){
-              rePKW<-screen_PC(rePKW,phy[,trait_i])[[1]]
+              rePKW<-screen_PC(rePKW,phy_trait_i)[[1]]
             }
           }
           me1<-matrix("pKWmEB",nrow(outPKW$result1),1)
           tr1<-matrix(trait_i,nrow(outPKW$result1),1)
-          tr1na<-matrix(PheName[trait_i,],nrow(outPKW$result1),1)
+          tr1na<-matrix(PheName,nrow(outPKW$result1),1)
           colnames(me1)<-"Method"
           colnames(tr1)<-"Trait ID"
           colnames(tr1na)<-"Trait name"
@@ -6746,26 +6816,41 @@ ReadData<-function(fileGen=NULL,filePhe=NULL,fileKin=NULL,filePS=NULL,fileCov=NU
   if(!is.null(fileGen)){
     if(is.character(fileGen)==TRUE){
       genRaw<-fread(fileGen,header = FALSE,stringsAsFactors=T)
-      genRaw_dup_TF <- duplicated(genRaw[,c(2,3)])
-      if(sum(genRaw_dup_TF)!=0){
-        if(sum(duplicated(genRaw))!=0){
-          genRaw <- genRaw[!genRaw_dup_TF,]
-        }else{
-          genRaw_3 <- as.character(genRaw[,3])
-          genRaw_3[genRaw_dup_TF] <- as.character(as.numeric(genRaw_3[genRaw_dup_TF])+1)
+      if(inputform==1||inputform==2){
+        genRaw_dup_TF <- duplicated(genRaw[,c(2,3)])
+        if(sum(genRaw_dup_TF)!=0){
+          # if(sum(duplicated(genRaw))!=0){
+          #   genRaw <- genRaw[!genRaw_dup_TF,]
+          # }
+          genRaw_3 <- as.character(unlist(genRaw[,3]))
+          genRaw_3[genRaw_dup_TF] <- as.character(as.numeric(genRaw_3[genRaw_dup_TF])+seq(1,sum(genRaw_dup_TF),1))
           genRaw[,3] <- as.factor(genRaw_3)
+        }
+      }
+      if(inputform==3){
+        genRaw_dup_TF <- duplicated(genRaw[,c(3,4)])
+        if(sum(genRaw_dup_TF)!=0){
+          genRaw_3 <- as.character(unlist(genRaw[,4]))
+          genRaw_3[genRaw_dup_TF] <- as.character(as.numeric(genRaw_3[genRaw_dup_TF])+seq(1,sum(genRaw_dup_TF),1))
+          genRaw[,4] <- as.factor(genRaw_3)
         }
       }
     }else{
       genRaw<-fileGen
-      genRaw_dup_TF <- duplicated(genRaw[,c(2,3)])
-      if(sum(genRaw_dup_TF)!=0){
-        if(sum(duplicated(genRaw))!=0){
-          genRaw <- genRaw[!genRaw_dup_TF,]
-        }else{
-          genRaw_3 <- as.character(genRaw[,3])
+      if(inputform==1||inputform==2){
+        genRaw_dup_TF <- duplicated(genRaw[,c(2,3)])
+        if(sum(genRaw_dup_TF)!=0){
+          genRaw_3 <- as.character(unlist(genRaw[,3]))
           genRaw_3[genRaw_dup_TF] <- as.character(as.numeric(genRaw_3[genRaw_dup_TF])+seq(1,sum(genRaw_dup_TF),1))
           genRaw[,3] <- as.factor(genRaw_3)
+        }
+      }
+      if(inputform==3){
+        genRaw_dup_TF <- duplicated(genRaw[,c(3,4)])
+        if(sum(genRaw_dup_TF)!=0){
+          genRaw_3 <- as.character(unlist(genRaw[,4]))
+          genRaw_3[genRaw_dup_TF] <- as.character(as.numeric(genRaw_3[genRaw_dup_TF])+seq(1,sum(genRaw_dup_TF),1))
+          genRaw[,4] <- as.factor(genRaw_3)
         }
       }
       CLO<-1
